@@ -149,7 +149,7 @@ public enum TokenType
 
 public class Lexer
 {
-    private string code;
+    private readonly string code;
 
     private int currentPosition;
 
@@ -170,34 +170,6 @@ public class Lexer
             currentChar = code[currentPosition];
     }
 
-    List<(char, TokenType)> operators = new List<(char, TokenType)>()
-            {
-                ('+', TokenType.PlusOperator),
-
-                ('-',TokenType.MinusOperator),
-
-                ('*',TokenType.MultOperator),
-
-                ('/', TokenType.DivideOperator),
-
-                ('^', TokenType.PowerOperator),
-
-                ('<',TokenType.LessThanOperator),
-
-                ('>', TokenType.GreatherThanOperator),
-
-                ('=',TokenType.EqualsOperator)
-                /* ('!','&','|' */
-            };
-
-    List<(char, TokenType)> indicators = new List<(char, TokenType)>()
-    {
-        ('(', TokenType.LeftParenthesisIndicator),
-        (')', TokenType.RightParenthesisIndicator),
-        (',', TokenType.CommaIndicator),
-        (';',TokenType.SemicolonIndicator)
-
-    };
     public List<Token> Tokenize()
     {
         List<Token> tokens = new List<Token>();
@@ -262,14 +234,47 @@ public class Lexer
 
         void AddOperator()
         {
-
-            foreach (var op in operators)
+            switch (currentChar)
             {
-                if (currentChar == op.Item1)
-                {
-                    tokens.Add(new Operator(op.Item2));
+                case '+':
+                    tokens.Add(new Operator(TokenType.PlusOperator));
                     Move(1);
-                }
+                    break;
+
+                case '-':
+                    tokens.Add(new Operator(TokenType.MinusOperator));
+                    Move(1);
+                    break;
+
+                case '*':
+                    tokens.Add(new Operator(TokenType.MultOperator));
+                    Move(1);
+                    break;
+
+                case '/':
+                    tokens.Add(new Operator(TokenType.DivideOperator));
+                    Move(1);
+                    break;
+
+                case '^':
+                    tokens.Add(new Operator(TokenType.PowerOperator));
+                    Move(1);
+                    break;
+
+                case '=':
+                    tokens.Add(new Operator(TokenType.EqualsOperator));
+                    Move(1);
+                    break;
+
+                case '<':
+                    tokens.Add(new Operator(TokenType.LessThanOperator));
+                    Move(1);
+                    break;
+
+                case '>':
+                    tokens.Add(new Operator(TokenType.GreatherThanOperator));
+                    Move(1);
+                    break;
             }
 
         }
@@ -293,15 +298,32 @@ public class Lexer
 
         void AddIndicator()
         {
-            foreach (var ind in indicators)
-            {
-                if (currentChar == ind.Item1)
-                {
-                    tokens.Add(new Indicator(ind.Item2));
-                    Move(1);
-                }
-            }
 
+
+            switch (currentChar)
+            {
+                case '(':
+                    tokens.Add(new Indicator(TokenType.LeftParenthesisIndicator));
+                    Move(1);
+                    break;
+
+                case ')':
+                    tokens.Add(new Indicator(TokenType.RightParenthesisIndicator));
+                    Move(1);
+                    break;
+
+                case ',':
+                    tokens.Add(new Indicator(TokenType.CommaIndicator));
+                    Move(1);
+                    break;
+
+                 case ';':
+                tokens.Add(new Indicator(TokenType.SemicolonIndicator));
+                    Move(1);
+                    break;
+
+            }
+    
         }
 
         #endregion

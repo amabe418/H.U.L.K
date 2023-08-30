@@ -15,8 +15,8 @@ public class Parser
 
     private void Move(int position)
     {
-        index+=position;
-        if(index<tokens.Count)
+        index += position;
+        if (index < tokens.Count)
         {
             currentToken = tokens[index];
         }
@@ -91,17 +91,20 @@ public class Parser
 
     public object Base()
     {
-        object result= null!;
+        object result = null!;
 
         switch (currentToken.GetType())
         {
             case TokenType.Number:
                 result = currentToken.GetValue();
                 break;
+                case TokenType.String:
+                result  = currentToken.GetValue();
+                break;
             case TokenType.LeftParenthesisIndicator:
                 Move(1);
                 result = Expression();
-                Move(1);
+
                 if (currentToken.GetType() != TokenType.RightParenthesisIndicator)
                 {
                     System.Console.WriteLine("SYNTAX ERROR");
