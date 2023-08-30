@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/amalia/Documents/hulk/hulk.csproj",
+      "projectUniqueName": "/home/amalia/Documents/H.U.L.K/hulk.csproj",
       "projectName": "hulk",
-      "projectPath": "/home/amalia/Documents/hulk/hulk.csproj",
+      "projectPath": "/home/amalia/Documents/H.U.L.K/hulk.csproj",
       "packagesPath": "/home/amalia/.nuget/packages/",
-      "outputPath": "/home/amalia/Documents/hulk/obj/",
+      "outputPath": "/home/amalia/Documents/H.U.L.K/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/home/amalia/.nuget/NuGet/NuGet.Config"
