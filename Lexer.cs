@@ -78,6 +78,27 @@ public class Indicator : Token
     public override string ToString() => $"{Type}";
 }
 
+public class KeyWord : Token
+{
+    TokenType Type { get; set; }
+    public KeyWord(TokenType type) : base(type)
+    {
+        Type = type;
+    }
+
+    public override object GetValue()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void SetValue(object value)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override string ToString() => $"{Type}";
+}
+
 public class DataType : Token
 {
     private object Value { get; set; }
@@ -131,8 +152,12 @@ public enum TokenType
     DivideOperator,
     PowerOperator,
     EqualsOperator,
+    DoubleEqualsOperator,
     LessThanOperator,
+    LessOrEqualsOperator,
+    ConcatOperator,
     GreatherThanOperator,
+    GreatherOrEqualsOperator,
     Identifier,
     String,
     LeftParenthesisIndicator,
@@ -145,6 +170,11 @@ public enum TokenType
     FunctionKeyWord,
     TrueKeyWord,
     FalseKeyWord,
+    IfKeyWord,
+    ElseKeyWord,
+    Null
+
+
 }
 
 public class Lexer
@@ -198,12 +228,14 @@ public class Lexer
             else if (currentChar == '"')
             {
                 string quotedString = "";
+                Move(1);
                 while (currentPosition < code.Length && currentChar != '"')
                 {
                     quotedString += currentChar.ToString();
                     Move(1);
                 }
                 tokens.Add(new DataType(TokenType.String, quotedString));
+                Move(1);
             }
 
             else if (IsIndicator())
@@ -229,7 +261,7 @@ public class Lexer
         bool IsOperator()
         {
 
-            return "+-*/^=<>".Contains(currentChar);
+            return "+-*/^=<>@".Contains(currentChar);
         }
 
         void AddOperator()
@@ -262,17 +294,48 @@ public class Lexer
                     break;
 
                 case '=':
-                    tokens.Add(new Operator(TokenType.EqualsOperator));
                     Move(1);
+                    switch (currentChar)
+                    {
+                        case '=':
+                            tokens.Add(new Operator(TokenType.DoubleEqualsOperator));
+                            Move(1);
+                            break;
+                        default:
+                            tokens.Add(new Operator(TokenType.EqualsOperator));
+                            break;
+                    }
+
                     break;
 
                 case '<':
-                    tokens.Add(new Operator(TokenType.LessThanOperator));
-                    Move(1);
+                    switch (currentChar)
+                    {
+                        case '=':
+                            tokens.Add(new Operator(TokenType.DoubleEqualsOperator));
+                            Move(1);
+                            break;
+                        default:
+                            tokens.Add(new Operator(TokenType.LessOrEqualsOperator));
+                            break;
+                    }
                     break;
 
                 case '>':
-                    tokens.Add(new Operator(TokenType.GreatherThanOperator));
+                  switch (currentChar)
+                    {
+                        case '=':
+                            tokens.Add(new Operator(TokenType.DoubleEqualsOperator));
+                            Move(1);
+                            break;
+                        default:
+                            tokens.Add(new Operator(TokenType.GreatherOrEqualsOperator));
+                            break;
+                    }
+                    break;
+
+                case '@':
+                    tokens.Add(new Operator(TokenType.ConcatOperator));
                     Move(1);
                     break;
             }
@@ -287,8 +350,50 @@ public class Lexer
                 identifier += currentChar.ToString();
                 Move(1);
             }
-            tokens.Add(new VarToken(TokenType.Identifier, null!, identifier));
-            Move(1);
+            switch (identifier)
+            {
+                case "let":
+                    tokens.Add(new KeyWord(TokenType.LetKeyWord));
+                    Move(1);
+                    break;
+
+                case "in":
+                    tokens.Add(new KeyWord(TokenType.InKeyWord));
+                    Move(1);
+                    break;
+
+                case "function":
+                    tokens.Add(new KeyWord(TokenType.FunctionKeyWord));
+                    Move(1);
+                    break;
+
+                case "if":
+                    tokens.Add(new KeyWord(TokenType.IfKeyWord));
+                    Move(1);
+                    break;
+
+                case "else":
+                    tokens.Add(new KeyWord(TokenType.ElseKeyWord));
+                    Move(1);
+                    break;
+
+                case "true":
+                    tokens.Add(new KeyWord(TokenType.TrueKeyWord));
+                    Move(1);
+                    break;
+
+                case "false":
+                    tokens.Add(new KeyWord(TokenType.FalseKeyWord));
+                    Move(1);
+                    break;
+                default:
+                    tokens.Add(new VarToken(TokenType.Identifier, null!, identifier));
+                    Move(1);
+                    break;
+
+            }
+
+
         }
 
         bool IsIndicator()
@@ -317,13 +422,13 @@ public class Lexer
                     Move(1);
                     break;
 
-                 case ';':
-                tokens.Add(new Indicator(TokenType.SemicolonIndicator));
+                case ';':
+                    tokens.Add(new Indicator(TokenType.SemicolonIndicator));
                     Move(1);
                     break;
 
             }
-    
+
         }
 
         #endregion
