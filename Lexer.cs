@@ -158,6 +158,10 @@ public enum TokenType
     ConcatOperator,
     GreatherThanOperator,
     GreatherOrEqualsOperator,
+    DistintOperator,
+    NonOperator,
+    AndOperator,
+    OrOperator,
     Identifier,
     String,
     LeftParenthesisIndicator,
@@ -172,7 +176,8 @@ public enum TokenType
     FalseKeyWord,
     IfKeyWord,
     ElseKeyWord,
-    Null
+    Null,
+    Bool
 
 
 }
@@ -261,7 +266,7 @@ public class Lexer
         bool IsOperator()
         {
 
-            return "+-*/^=<>@".Contains(currentChar);
+            return "+-*/^=<>@|&!".Contains(currentChar);
         }
 
         void AddOperator()
@@ -309,27 +314,29 @@ public class Lexer
                     break;
 
                 case '<':
+                    Move(1);
                     switch (currentChar)
                     {
                         case '=':
-                            tokens.Add(new Operator(TokenType.DoubleEqualsOperator));
+                            tokens.Add(new Operator(TokenType.LessOrEqualsOperator));
                             Move(1);
                             break;
                         default:
-                            tokens.Add(new Operator(TokenType.LessOrEqualsOperator));
+                            tokens.Add(new Operator(TokenType.LessThanOperator));
                             break;
                     }
                     break;
 
                 case '>':
-                  switch (currentChar)
+                    Move(1);
+                    switch (currentChar)
                     {
                         case '=':
-                            tokens.Add(new Operator(TokenType.DoubleEqualsOperator));
+                            tokens.Add(new Operator(TokenType.GreatherOrEqualsOperator));
                             Move(1);
                             break;
                         default:
-                            tokens.Add(new Operator(TokenType.GreatherOrEqualsOperator));
+                            tokens.Add(new Operator(TokenType.GreatherThanOperator));
                             break;
                     }
                     break;
@@ -337,6 +344,27 @@ public class Lexer
                 case '@':
                     tokens.Add(new Operator(TokenType.ConcatOperator));
                     Move(1);
+                    break;
+                case '|':
+                    tokens.Add(new Operator(TokenType.OrOperator));
+                    Move(1);
+                    break;
+                case '&':
+                    tokens.Add(new Operator(TokenType.AndOperator));
+                    Move(1);
+                    break;
+                case '!':
+                    Move(1);
+                    switch (currentChar)
+                    {
+                        case '=':
+                            tokens.Add(new Operator(TokenType.DistintOperator));
+                            Move(1);
+                            break;
+                        default:
+                            tokens.Add(new Operator(TokenType.NonOperator));
+                            break;
+                    }
                     break;
             }
 

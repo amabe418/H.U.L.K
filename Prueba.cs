@@ -1,9 +1,9 @@
 namespace Interpreter;
 public static class Program
-{
+{  //me quede en que ya hace todas las expresiones algebraicas y booleanas
     public static void Main(string[] args)
     {
-        string sourceCode = " 5 + \"years old\";";
+        string sourceCode = " !(5 == 5) | false;";
         Lexer lexer = new Lexer(sourceCode);
         List<Token> tokens = lexer.Tokenize();
         System.Console.WriteLine(String.Join('\n', tokens));

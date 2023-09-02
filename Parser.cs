@@ -25,6 +25,8 @@ public class Result
 
     public object GetValue() => value;
 
+
+
 }
 public class Parser
 {
@@ -49,12 +51,141 @@ public class Parser
         }
     }
 
+    public bool Bool(Result option)
+    {
+        if (option.GetValue().ToString() == "true") return true;
+        else if (option.GetValue().ToString() == "falsee") return false;
+
+        return false;
+    }
     public Result Analyze()
     {
         return Expression();
     }
-
     public Result Expression()
+    {
+        Result result = PreviousExpression();
+        while (index < tokens.Count && (currentToken.GetType() == TokenType.AndOperator || currentToken.GetType() == TokenType.OrOperator))
+        {
+            Token op = currentToken;
+            Move(1);
+            Result nextExpression = PreviousExpression();
+            if (result.GetType() == TokenType.Bool && nextExpression.GetType() == TokenType.Bool)
+            {
+                switch (op.GetType())
+                {
+                    case TokenType.AndOperator:
+                        result.SetValue(Bool(result) && Bool(nextExpression));
+                        break;
+
+                    case TokenType.OrOperator:
+                        result.SetValue(Bool(result) || Bool(nextExpression));
+                        break;
+
+                }
+            }
+            else
+            {
+                System.Console.WriteLine("SYNTAX ERROR!: And or Or comparisons can only be performed between boolean expressions");
+            }
+        }
+        return result;
+    }
+    public Result PreviousExpression()
+    {
+        Result result = BasicExpression();
+        while (index < tokens.Count && (currentToken.GetType() == TokenType.DoubleEqualsOperator || currentToken.GetType() == TokenType.GreatherOrEqualsOperator || currentToken.GetType() == TokenType.GreatherThanOperator || currentToken.GetType() == TokenType.LessOrEqualsOperator || currentToken.GetType() == TokenType.LessThanOperator || currentToken.GetType() == TokenType.DistintOperator))
+        {
+            Token op = currentToken;
+            Move(1);
+            Result basicExpression = BasicExpression();
+            switch (op.GetType())
+            {
+                case TokenType.DoubleEqualsOperator: // a==b
+                    if (result.GetType() == basicExpression.GetType())
+                    {
+                        result.SetValue(result.GetValue().ToString() == basicExpression.GetValue().ToString());
+                        result.SetType(TokenType.Bool);
+                    }
+                    else
+                    {
+                        System.Console.WriteLine("SYNTAX ERROR!: Comparisons can't be performed between different DataTypes");
+                        Environment.Exit(0);
+                    }
+                    break;
+
+                case TokenType.DistintOperator: //a!=b
+                    if (result.GetType() == basicExpression.GetType())
+                    {
+                        result.SetValue(result.GetValue().ToString() != basicExpression.GetValue().ToString());
+                        result.SetType(TokenType.Bool);
+                    }
+                    else
+                    {
+                        System.Console.WriteLine("SYNTAX ERROR!: Comparisons can't be performed between different DataTypes");
+                        Environment.Exit(0);
+                    }
+                    break;
+
+                case TokenType.GreatherOrEqualsOperator: //a>=b
+                    if (result.GetType() == TokenType.Number && basicExpression.GetType() == TokenType.Number)
+                    {
+                        result.SetValue(double.Parse(result.GetValue().ToString()!) >= double.Parse(basicExpression.GetValue().ToString()!));
+                        result.SetType(TokenType.Bool);
+                    }
+                    else
+                    {
+                        System.Console.WriteLine("SYNTAX ERROR!: Comparisons can't be performed between DataTypes different to number");
+                        Environment.Exit(0);
+                    }
+                    break;
+
+                case TokenType.GreatherThanOperator: //a>b
+                    if (result.GetType() == TokenType.Number && basicExpression.GetType() == TokenType.Number)
+                    {
+                        result.SetValue(double.Parse(result.GetValue().ToString()!) > double.Parse(basicExpression.GetValue().ToString()!));
+                        result.SetType(TokenType.Bool);
+                    }
+                    else
+                    {
+                        System.Console.WriteLine("SYNTAX ERROR!: Comparisons can't be performed between DataTypes different to number");
+                        Environment.Exit(0);
+                    }
+                    break;
+
+                case TokenType.LessOrEqualsOperator: //a<=b
+                    if (result.GetType() == TokenType.Number && basicExpression.GetType() == TokenType.Number)
+                    {
+                        result.SetValue(double.Parse(result.GetValue().ToString()!) <= double.Parse(basicExpression.GetValue().ToString()!));
+                        result.SetType(TokenType.Bool);
+                    }
+                    else
+                    {
+                        System.Console.WriteLine("SYNTAX ERROR!: Comparisons can't be performed between DataTypes different to number");
+                        Environment.Exit(0);
+                    }
+                    break;
+
+                case TokenType.LessThanOperator: //a<b
+                    if (result.GetType() == TokenType.Number && basicExpression.GetType() == TokenType.Number)
+                    {
+                        result.SetValue(double.Parse(result.GetValue().ToString()!) < double.Parse(basicExpression.GetValue().ToString()!));
+                        result.SetType(TokenType.Bool);
+                    }
+                    else
+                    {
+                        System.Console.WriteLine("SYNTAX ERROR!: Comparisons can't be performed between DataTypes different to number");
+                        Environment.Exit(0);
+                    }
+                    break;
+
+            }
+        }
+
+
+        return result;
+    }
+    public Result BasicExpression()
     {
         Result result = Addend();
         while (index < tokens.Count && currentToken.GetType() == TokenType.ConcatOperator)
@@ -63,8 +194,8 @@ public class Parser
             Result addend = Addend();
             if (result.GetType() == TokenType.String || result.GetType() == TokenType.Number || addend.GetType() == TokenType.String || addend.GetType() == TokenType.Number)
             {
-              result.SetValue(result.GetValue().ToString() + " " + addend.GetValue().ToString());
-              result.SetType(TokenType.String);
+                result.SetValue(result.GetValue().ToString() + " " + addend.GetValue().ToString());
+                result.SetType(TokenType.String);
             }
             else
             {
@@ -76,7 +207,7 @@ public class Parser
     }
 
 
-
+    /* este metodo es para concatenar en caso de que sea necesario */
     public Result Addend()
     {
         Result result = Term();
@@ -107,7 +238,8 @@ public class Parser
         return result;
 
     }
-
+    /* este metodo devuelve el valor de una expresion  compuesta por terminos unidos 
+    por los operadores de suma o resta, o un factor en caso de que no sea posible realozar las operaciones */
     public Result Term()
     {
         Result result = Factor();
@@ -138,7 +270,9 @@ public class Parser
         return result;
     }
 
-
+    /* este metodo es para devolver expresiones que sean terminos numericos unidos por el operador
+    de potencia, o una base, en caso de que no haya operadores de potencia al momento de revisar
+    una porcion de expresion*/
     public Result Factor()
     {
         Result result = Base();
@@ -184,12 +318,12 @@ public class Parser
 
             case TokenType.TrueKeyWord:
                 result.SetValue(true);
-                result.SetType(TokenType.TrueKeyWord);
+                result.SetType(TokenType.Bool);
                 break;
 
             case TokenType.FalseKeyWord:
                 result.SetValue(false);
-                result.SetType(TokenType.FalseKeyWord);
+                result.SetType(TokenType.Bool);
                 break;
 
             case TokenType.PlusOperator:
@@ -230,6 +364,20 @@ public class Parser
                 {
                     System.Console.WriteLine("SYNTAX ERROR: Right parenthesis expected");
                     Environment.Exit(0);
+                }
+                break;
+            case TokenType.NonOperator:
+                Move(1);
+                Result nextExpression = Base();
+                if (nextExpression.GetType() == TokenType.Bool)
+                {
+                    result.SetValue(!Bool(nextExpression));
+                    result.SetType(TokenType.Bool);
+                    Move(1);
+                }
+                else
+                {
+                    System.Console.WriteLine("SYNTAX ERROR!: Negation operator can only be placed before a boolean expression ");
                 }
                 break;
             default:
