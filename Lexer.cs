@@ -208,6 +208,10 @@ public class Lexer
     public List<Token> Tokenize()
     {
         List<Token> tokens = new List<Token>();
+        int leftParenthesis = 0;
+        int rightParenthesis = 0;
+        int ifToken = 0;
+        int elseToken = 0;
 
         while (currentPosition < code.Length)
         {
@@ -251,6 +255,8 @@ public class Lexer
 
 
         #region AuxiliarMethods
+
+
 
         void AddNumber()
         {
@@ -382,41 +388,43 @@ public class Lexer
             {
                 case "let":
                     tokens.Add(new KeyWord(TokenType.LetKeyWord));
-                    Move(1);
+
                     break;
 
                 case "in":
                     tokens.Add(new KeyWord(TokenType.InKeyWord));
-                    Move(1);
+
                     break;
 
                 case "function":
                     tokens.Add(new KeyWord(TokenType.FunctionKeyWord));
-                    Move(1);
+
                     break;
 
                 case "if":
                     tokens.Add(new KeyWord(TokenType.IfKeyWord));
-                    Move(1);
+                    ifToken++;
+
                     break;
 
                 case "else":
                     tokens.Add(new KeyWord(TokenType.ElseKeyWord));
-                    Move(1);
+                    elseToken++;
+
                     break;
 
                 case "true":
                     tokens.Add(new KeyWord(TokenType.TrueKeyWord));
-                    Move(1);
+
                     break;
 
                 case "false":
                     tokens.Add(new KeyWord(TokenType.FalseKeyWord));
-                    Move(1);
+
                     break;
                 default:
                     tokens.Add(new VarToken(TokenType.Identifier, null!, identifier));
-                    Move(1);
+
                     break;
 
             }
@@ -437,11 +445,13 @@ public class Lexer
             {
                 case '(':
                     tokens.Add(new Indicator(TokenType.LeftParenthesisIndicator));
+                    leftParenthesis++;
                     Move(1);
                     break;
 
                 case ')':
                     tokens.Add(new Indicator(TokenType.RightParenthesisIndicator));
+                    rightParenthesis++;
                     Move(1);
                     break;
 
@@ -459,7 +469,28 @@ public class Lexer
 
         }
 
+
         #endregion
+
+
+
+        if (leftParenthesis != rightParenthesis)
+        {
+            System.Console.WriteLine("LEXICAL ERROR: not balanced parenthesis");
+            Environment.Exit(0);
+        }
+        
+        if(ifToken!=elseToken)
+        {
+            System.Console.WriteLine("SYNTAX ERROR: there's an 'else' expression missing");
+            Environment.Exit(0);
+        }
+
+        if (tokens.ElementAt(tokens.Count - 1).GetType() != TokenType.SemicolonIndicator)
+        {
+            System.Console.WriteLine("LEXICAL ERROR: ; expected ");
+            Environment.Exit(0);
+        }
 
         return tokens;
 
