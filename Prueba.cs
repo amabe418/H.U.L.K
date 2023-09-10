@@ -4,7 +4,7 @@ public static class Program
    // espressions
     public static void Main(string[] args)
     {
-        string sourceCode = "if (true) if(false) 2+2 else 4+4 else 5+5 ;";
+        string sourceCode = "if (true) if (false) 2+2 else if (true) 7+7 else  4+4 else 5+5 ;";
         Lexer lexer = new Lexer(sourceCode);
         List<Token> tokens = lexer.Tokenize();
         System.Console.WriteLine(String.Join('\n', tokens));

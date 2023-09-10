@@ -443,28 +443,43 @@ public class Parser
     public Result IfExpression()
     {
         int ifPosition = index - 1;
-        Result ifEvaluation = Expression();
-        Result ifResult = null!;
-        if (ifEvaluation.GetType() != TokenType.Bool)
+        Result conditionResult = Expression();
+        Result ifExpressionResult = null!;
+        if (conditionResult.GetType() != TokenType.Bool)
         {
-            System.Console.WriteLine($"SEMANTIC ERROR: can't implicity convert the type {ifEvaluation.GetType()} into bool");
+            System.Console.WriteLine($"SEMANTIC ERROR: can't implicity convert the type {conditionResult.GetType()} into bool");
             Environment.Exit(0);
         }
-        else
+
+       
+        if (Bool(conditionResult) == true)
         {
-            if (Bool(ifEvaluation) == true)
+            if (currentToken.GetType() == TokenType.IfKeyWord)
             {
-                ifResult = Expression();
+                Move(1);
+                 ifExpressionResult = IfExpression();
             }
             else
             {
-               index = ElsePosition(ifPosition);
-               currentToken = tokens.ElementAt(index);
-               ifResult = Expression();
+                 ifExpressionResult = Expression();
             }
         }
+        else
+        {
+            index = ElsePosition(ifPosition);
+            currentToken = tokens[index];
 
-        return ifResult;
+            if (currentToken.GetType() == TokenType.IfKeyWord)
+            {
+                Move(1);
+                 ifExpressionResult = IfExpression();
+            }
+            else
+            {
+                 ifExpressionResult = Expression();
+            }
+        }
+      return ifExpressionResult;
     }
     #endregion
 }
