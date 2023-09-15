@@ -86,11 +86,14 @@ public class Parser
             if (tokens.ElementAt(i).GetType() == TokenType.ElseKeyWord)
             {
                 elseAmount++;
-                if (ifAmount == elseAmount)
-                {
-                    position = i;
-                }
+
             }
+            if (ifAmount == elseAmount)
+            {
+                position = i;
+                return position + 1;
+            }
+
         }
         return position + 1;
     }
@@ -451,17 +454,17 @@ public class Parser
             Environment.Exit(0);
         }
 
-       
+
         if (Bool(conditionResult) == true)
         {
             if (currentToken.GetType() == TokenType.IfKeyWord)
             {
                 Move(1);
-                 ifExpressionResult = IfExpression();
+                ifExpressionResult = IfExpression();
             }
             else
             {
-                 ifExpressionResult = Expression();
+                ifExpressionResult = Expression();
             }
         }
         else
@@ -472,14 +475,14 @@ public class Parser
             if (currentToken.GetType() == TokenType.IfKeyWord)
             {
                 Move(1);
-                 ifExpressionResult = IfExpression();
+                ifExpressionResult = IfExpression();
             }
             else
             {
-                 ifExpressionResult = Expression();
+                ifExpressionResult = Expression();
             }
         }
-      return ifExpressionResult;
+        return ifExpressionResult;
     }
     #endregion
 }
