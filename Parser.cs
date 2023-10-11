@@ -1,33 +1,8 @@
+using System.Reflection.Metadata.Ecma335;
+
 namespace Interpreter;
 
-public class Result
-{
-    TokenType type { get; set; }
-    object value { get; set; }
 
-    public Result(TokenType Type, object Value)
-    {
-        type = Type;
-        value = Value;
-
-    }
-    public void SetValue(object Value)
-    {
-        value = Value;
-    }
-
-    public void SetType(TokenType Type)
-    {
-        type = Type;
-    }
-
-    public TokenType GetType() => type;
-
-    public object GetValue() => value;
-
-
-
-}
 public class Parser
 {
     private List<Token> tokens;
@@ -41,6 +16,15 @@ public class Parser
         currentToken = tokens[index];
 
     }
+    public Result Analyze()
+    {
+        return Expression();
+
+    }
+
+
+
+    #region AuxiliarMethods
 
     private void Move(int position)
     {
@@ -53,33 +37,90 @@ public class Parser
 
     public bool Bool(Result option)
     {
-        if (option.GetValue().ToString() == "true") return true;
-        else if (option.GetValue().ToString() == "falsee") return false;
+        if (option.GetValue().ToString() == "True")
+        {
+            return true;
+        }
+        else /* (option.GetValue().ToString() == "false") return false; */
+        {
+            return false;
+        }
+    }
 
-        return false;
-    }
-    public Result Analyze()
+
+    public int ElsePosition(int ifPosition)
     {
-        return Expression();
+        int position = int.MinValue;
+        int ifAmount = 1;
+        int elseAmount = 0;
+        for (int i = ifPosition + 1; i < tokens.Count; i++)
+        {
+            if (tokens.ElementAt(i).GetType() == TokenType.IfKeyWord)
+            {
+                ifAmount++;
+            }
+            if (tokens.ElementAt(i).GetType() == TokenType.ElseKeyWord)
+            {
+                elseAmount++;
+
+            }
+            if (ifAmount == elseAmount)
+            {
+                position = i;
+                return position + 1;
+            }
+
+        }
+        return position + 1;
     }
+    public int InPosition(int ifPosition)
+    {
+        int position = int.MinValue;
+        int letAmount = 1;
+        int inAmount = 0;
+        for (int i = ifPosition + 1; i < tokens.Count; i++)
+        {
+            if (tokens.ElementAt(i).GetType() == TokenType.LetKeyWord)
+            {
+                letAmount++;
+            }
+            if (tokens.ElementAt(i).GetType() == TokenType.InKeyWord)
+            {
+                inAmount++;
+
+            }
+            if (letAmount == inAmount)
+            {
+                position = i;
+                return position + 1;
+            }
+
+        }
+        return position + 1;
+    }
+    #endregion
+
+
+
+    #region ParsingMethod
     public Result Expression()
     {
-        Result result = PreviousExpression();
+        Result expressionResult = PreviousExpression();
         while (index < tokens.Count && (currentToken.GetType() == TokenType.AndOperator || currentToken.GetType() == TokenType.OrOperator))
         {
             Token op = currentToken;
             Move(1);
             Result nextExpression = PreviousExpression();
-            if (result.GetType() == TokenType.Bool && nextExpression.GetType() == TokenType.Bool)
+            if (expressionResult.GetType() == TokenType.Bool && nextExpression.GetType() == TokenType.Bool)
             {
                 switch (op.GetType())
                 {
                     case TokenType.AndOperator:
-                        result.SetValue(Bool(result) && Bool(nextExpression));
+                        expressionResult.SetValue(Bool(expressionResult) && Bool(nextExpression));
                         break;
 
                     case TokenType.OrOperator:
-                        result.SetValue(Bool(result) || Bool(nextExpression));
+                        expressionResult.SetValue(Bool(expressionResult) || Bool(nextExpression));
                         break;
 
                 }
@@ -89,11 +130,12 @@ public class Parser
                 System.Console.WriteLine("SYNTAX ERROR!: And or Or comparisons can only be performed between boolean expressions");
             }
         }
-        return result;
+        Storage.variables.Clear();
+        return expressionResult;
     }
     public Result PreviousExpression()
     {
-        Result result = BasicExpression();
+        Result previousExpressionResult = BasicExpression();
         while (index < tokens.Count && (currentToken.GetType() == TokenType.DoubleEqualsOperator || currentToken.GetType() == TokenType.GreatherOrEqualsOperator || currentToken.GetType() == TokenType.GreatherThanOperator || currentToken.GetType() == TokenType.LessOrEqualsOperator || currentToken.GetType() == TokenType.LessThanOperator || currentToken.GetType() == TokenType.DistintOperator))
         {
             Token op = currentToken;
@@ -102,10 +144,10 @@ public class Parser
             switch (op.GetType())
             {
                 case TokenType.DoubleEqualsOperator: // a==b
-                    if (result.GetType() == basicExpression.GetType())
+                    if (previousExpressionResult.GetType() == basicExpression.GetType())
                     {
-                        result.SetValue(result.GetValue().ToString() == basicExpression.GetValue().ToString());
-                        result.SetType(TokenType.Bool);
+                        previousExpressionResult.SetValue(previousExpressionResult.GetValue().ToString() == basicExpression.GetValue().ToString());
+                        previousExpressionResult.SetType(TokenType.Bool);
                     }
                     else
                     {
@@ -115,10 +157,10 @@ public class Parser
                     break;
 
                 case TokenType.DistintOperator: //a!=b
-                    if (result.GetType() == basicExpression.GetType())
+                    if (previousExpressionResult.GetType() == basicExpression.GetType())
                     {
-                        result.SetValue(result.GetValue().ToString() != basicExpression.GetValue().ToString());
-                        result.SetType(TokenType.Bool);
+                        previousExpressionResult.SetValue(previousExpressionResult.GetValue().ToString() != basicExpression.GetValue().ToString());
+                        previousExpressionResult.SetType(TokenType.Bool);
                     }
                     else
                     {
@@ -128,10 +170,10 @@ public class Parser
                     break;
 
                 case TokenType.GreatherOrEqualsOperator: //a>=b
-                    if (result.GetType() == TokenType.Number && basicExpression.GetType() == TokenType.Number)
+                    if (previousExpressionResult.GetType() == TokenType.Number && basicExpression.GetType() == TokenType.Number)
                     {
-                        result.SetValue(double.Parse(result.GetValue().ToString()!) >= double.Parse(basicExpression.GetValue().ToString()!));
-                        result.SetType(TokenType.Bool);
+                        previousExpressionResult.SetValue(double.Parse(previousExpressionResult.GetValue().ToString()!) >= double.Parse(basicExpression.GetValue().ToString()!));
+                        previousExpressionResult.SetType(TokenType.Bool);
                     }
                     else
                     {
@@ -141,40 +183,40 @@ public class Parser
                     break;
 
                 case TokenType.GreatherThanOperator: //a>b
-                    if (result.GetType() == TokenType.Number && basicExpression.GetType() == TokenType.Number)
+                    if (previousExpressionResult.GetType() == TokenType.Number && basicExpression.GetType() == TokenType.Number)
                     {
-                        result.SetValue(double.Parse(result.GetValue().ToString()!) > double.Parse(basicExpression.GetValue().ToString()!));
-                        result.SetType(TokenType.Bool);
+                        previousExpressionResult.SetValue(double.Parse(previousExpressionResult.GetValue().ToString()!) > double.Parse(basicExpression.GetValue().ToString()!));
+                        previousExpressionResult.SetType(TokenType.Bool);
                     }
                     else
                     {
-                        System.Console.WriteLine("SYNTAX ERROR!: Comparisons can't be performed between DataTypes different to number");
+                        System.Console.WriteLine("SEMANTIC ERROR!: Comparisons can't be performed between DataTypes different to number");
                         Environment.Exit(0);
                     }
                     break;
 
                 case TokenType.LessOrEqualsOperator: //a<=b
-                    if (result.GetType() == TokenType.Number && basicExpression.GetType() == TokenType.Number)
+                    if (previousExpressionResult.GetType() == TokenType.Number && basicExpression.GetType() == TokenType.Number)
                     {
-                        result.SetValue(double.Parse(result.GetValue().ToString()!) <= double.Parse(basicExpression.GetValue().ToString()!));
-                        result.SetType(TokenType.Bool);
+                        previousExpressionResult.SetValue(double.Parse(previousExpressionResult.GetValue().ToString()!) <= double.Parse(basicExpression.GetValue().ToString()!));
+                        previousExpressionResult.SetType(TokenType.Bool);
                     }
                     else
                     {
-                        System.Console.WriteLine("SYNTAX ERROR!: Comparisons can't be performed between DataTypes different to number");
+                        System.Console.WriteLine("SEMANTIC ERROR!: Comparisons can't be performed between DataTypes different to number");
                         Environment.Exit(0);
                     }
                     break;
 
                 case TokenType.LessThanOperator: //a<b
-                    if (result.GetType() == TokenType.Number && basicExpression.GetType() == TokenType.Number)
+                    if (previousExpressionResult.GetType() == TokenType.Number && basicExpression.GetType() == TokenType.Number)
                     {
-                        result.SetValue(double.Parse(result.GetValue().ToString()!) <= double.Parse(basicExpression.GetValue().ToString()!));
-                        result.SetType(TokenType.Bool);
+                        previousExpressionResult.SetValue(double.Parse(previousExpressionResult.GetValue().ToString()!) < double.Parse(basicExpression.GetValue().ToString()!));
+                        previousExpressionResult.SetType(TokenType.Bool);
                     }
                     else
                     {
-                        System.Console.WriteLine("SYNTAX ERROR!: Comparisons can't be performed between DataTypes different to number");
+                        System.Console.WriteLine("SEMANTIC ERROR!: Comparisons can't be performed between DataTypes different to number");
                         Environment.Exit(0);
                     }
                     break;
@@ -183,19 +225,19 @@ public class Parser
         }
 
 
-        return result;
+        return previousExpressionResult;
     }
     public Result BasicExpression()
     {
-        Result result = Addend();
+        Result basicExpressionResult = Addend();
         while (index < tokens.Count && currentToken.GetType() == TokenType.ConcatOperator)
         {
             Move(1);
             Result addend = Addend();
-            if (result.GetType() == TokenType.String || result.GetType() == TokenType.Number || addend.GetType() == TokenType.String || addend.GetType() == TokenType.Number)
+            if (basicExpressionResult.GetType() == TokenType.String || basicExpressionResult.GetType() == TokenType.Number || addend.GetType() == TokenType.String || addend.GetType() == TokenType.Number)
             {
-                result.SetValue(result.GetValue().ToString() + " " + addend.GetValue().ToString());
-                result.SetType(TokenType.String);
+                basicExpressionResult.SetValue(basicExpressionResult.GetValue().ToString() + " " + addend.GetValue().ToString());
+                basicExpressionResult.SetType(TokenType.String);
             }
             else
             {
@@ -203,28 +245,28 @@ public class Parser
                 Environment.Exit(0);
             }
         }
-        return result;
+        return basicExpressionResult;
     }
 
 
     /* este metodo es para concatenar en caso de que sea necesario */
     public Result Addend()
     {
-        Result result = Term();
+        Result addendResult = Term();
         while (index < tokens.Count && (currentToken.GetType() == TokenType.PlusOperator || currentToken.GetType() == TokenType.MinusOperator))
         {
             Token op = currentToken;
             Move(1);
             Result term = Term();
-            if (result.GetType() == TokenType.Number && term.GetType() == TokenType.Number)
+            if (addendResult.GetType() == TokenType.Number && term.GetType() == TokenType.Number)
             {
                 if (op.GetType() == TokenType.PlusOperator)
                 {
-                    result.SetValue(double.Parse(result.GetValue().ToString()!) + double.Parse(term.GetValue().ToString()!));
+                    addendResult.SetValue(double.Parse(addendResult.GetValue().ToString()!) + double.Parse(term.GetValue().ToString()!));
                 }
                 if (op.GetType() == TokenType.MinusOperator)
                 {
-                    result.SetValue(double.Parse(result.GetValue().ToString()!) - double.Parse(term.GetValue().ToString()!));
+                    addendResult.SetValue(double.Parse(addendResult.GetValue().ToString()!) - double.Parse(term.GetValue().ToString()!));
                 }
             }
             else
@@ -235,29 +277,29 @@ public class Parser
 
         }
 
-        return result;
+        return addendResult;
 
     }
     /* este metodo devuelve el valor de una expresion  compuesta por terminos unidos 
     por los operadores de suma o resta, o un factor en caso de que no sea posible realozar las operaciones */
     public Result Term()
     {
-        Result result = Factor();
+        Result termResult = Factor();
         while (index < tokens.Count && (currentToken.GetType() == TokenType.MultOperator || currentToken.GetType() == TokenType.DivideOperator))
         {
             Token op = currentToken;
             Move(1);
             Result factor = Factor();
 
-            if (result.GetType() == TokenType.Number && factor.GetType() == TokenType.Number)
+            if (termResult.GetType() == TokenType.Number && factor.GetType() == TokenType.Number)
             {
                 if (op.GetType() == TokenType.MultOperator)
                 {
-                    result.SetValue(double.Parse(result.GetValue().ToString()!) * double.Parse(factor.GetValue().ToString()!));
+                    termResult.SetValue(double.Parse(termResult.GetValue().ToString()!) * double.Parse(factor.GetValue().ToString()!));
                 }
                 if (op.GetType() == TokenType.DivideOperator)
                 {
-                    result.SetValue(double.Parse(result.GetValue().ToString()!) * double.Parse(factor.GetValue().ToString()!));
+                    termResult.SetValue(double.Parse(termResult.GetValue().ToString()!) * double.Parse(factor.GetValue().ToString()!));
                 }
             }
             else
@@ -267,7 +309,7 @@ public class Parser
             }
         }
 
-        return result;
+        return termResult;
     }
 
     /* este metodo es para devolver expresiones que sean terminos numericos unidos por el operador
@@ -275,16 +317,16 @@ public class Parser
     una porcion de expresion*/
     public Result Factor()
     {
-        Result result = Base();
+        Result factorResult = Base();
         Move(1);
         while (index < tokens.Count && (currentToken.GetType() == TokenType.PowerOperator))
         {
             Token op = currentToken;
             Move(1);
             Result secondBase = Base();
-            if (result.GetType() == TokenType.Number && secondBase.GetType() == TokenType.Number)
+            if (factorResult.GetType() == TokenType.Number && secondBase.GetType() == TokenType.Number)
             {
-                result.SetValue(Math.Pow(double.Parse(result.GetValue().ToString()!), double.Parse(secondBase.GetValue().ToString()!)));
+                factorResult.SetValue(Math.Pow(double.Parse(factorResult.GetValue().ToString()!), double.Parse(secondBase.GetValue().ToString()!)));
             }
             else
             {
@@ -293,7 +335,7 @@ public class Parser
             }
         }
 
-        return result;
+        return factorResult;
     }
 
     /* 
@@ -302,28 +344,28 @@ public class Parser
     */
     public Result Base()
     {
-        Result result = new Result(TokenType.Null, null!);
+        Result baseResult = new Result(TokenType.Null, null!);
 
         switch (currentToken.GetType())
         {
             case TokenType.Number:
-                result.SetValue(currentToken.GetValue());
-                result.SetType(TokenType.Number);
+                baseResult.SetValue(currentToken.GetValue());
+                baseResult.SetType(TokenType.Number);
                 break;
 
             case TokenType.String:
-                result.SetValue(currentToken.GetValue());
-                result.SetType(TokenType.String);
+                baseResult.SetValue(currentToken.GetValue());
+                baseResult.SetType(TokenType.String);
                 break;
 
             case TokenType.TrueKeyWord:
-                result.SetValue(true);
-                result.SetType(TokenType.Bool);
+                baseResult.SetValue(true);
+                baseResult.SetType(TokenType.Bool);
                 break;
 
             case TokenType.FalseKeyWord:
-                result.SetValue(false);
-                result.SetType(TokenType.Bool);
+                baseResult.SetValue(false);
+                baseResult.SetType(TokenType.Bool);
                 break;
 
             case TokenType.PlusOperator:
@@ -331,8 +373,8 @@ public class Parser
                 Result _nextToken = Base();
                 if (_nextToken.GetType() == TokenType.Number)
                 {
-                    result.SetType(TokenType.Number);
-                    result.SetValue(0 + double.Parse(_nextToken.GetValue().ToString()!));
+                    baseResult.SetType(TokenType.Number);
+                    baseResult.SetValue(0 + double.Parse(_nextToken.GetValue().ToString()!));
                 }
                 else
                 {
@@ -347,8 +389,8 @@ public class Parser
                 Result nextToken = Base();
                 if (nextToken.GetType() == TokenType.Number)
                 {
-                    result.SetType(TokenType.Number);
-                    result.SetValue(0 - double.Parse(nextToken.GetValue().ToString()!));
+                    baseResult.SetType(TokenType.Number);
+                    baseResult.SetValue(0 - double.Parse(nextToken.GetValue().ToString()!));
                 }
                 else
                 {
@@ -358,7 +400,7 @@ public class Parser
                 break;
             case TokenType.LeftParenthesisIndicator:
                 Move(1);
-                result = Expression();
+                baseResult = Expression();
 
                 if (currentToken.GetType() != TokenType.RightParenthesisIndicator)
                 {
@@ -371,8 +413,8 @@ public class Parser
                 Result nextExpression = Base();
                 if (nextExpression.GetType() == TokenType.Bool)
                 {
-                    result.SetValue(!Bool(nextExpression));
-                    result.SetType(TokenType.Bool);
+                    baseResult.SetValue(Bool(nextExpression));
+                    baseResult.SetType(TokenType.Bool);
                     Move(1);
                 }
                 else
@@ -380,12 +422,212 @@ public class Parser
                     System.Console.WriteLine("SYNTAX ERROR!: Negation operator can only be placed before a boolean expression ");
                 }
                 break;
+            case TokenType.IfKeyWord:
+                Move(1);
+                if (currentToken.GetType() != TokenType.LeftParenthesisIndicator)
+                {
+                    System.Console.WriteLine("SYNTAX ERROR: Left parenthesis expected.");
+                    Environment.Exit(0);
+
+                }
+                else
+                {
+                    baseResult = IfExpression();
+                }
+                break;
+            case TokenType.LetKeyWord:
+                Move(1);
+                CreateVariable();
+                baseResult = Expression();
+                break;
+            case TokenType.Identifier:
+                if (Storage.variables.ContainsKey(currentToken.GetName().ToString()!))
+                {
+                    baseResult.SetType(Storage.variables[currentToken.GetName().ToString()!].GetType());
+                    baseResult.SetValue(Storage.variables[currentToken.GetName().ToString()!].GetValue());
+
+                }
+                else if (Storage.functions.ContainsKey(currentToken.GetName().ToString()))
+                {
+                    baseResult = EvaluateFunction(Storage.functions[currentToken.GetName()]);
+                }
+                else
+                {
+                    System.Console.WriteLine("SYNTAX ERROR: The identifier doesn't exist in the current context");
+                    Environment.Exit(0);
+                }
+
+
+                break;
+            case TokenType.FunctionKeyWord:
+                Move(1);
+                CreateFunction();
+                System.Console.WriteLine("function created succesfully");
+                Environment.Exit(0);
+                break;
+
             default:
                 System.Console.WriteLine("not expected token");
                 Environment.Exit(0);
                 break;
         }
 
-        return result!;
+        return baseResult;
     }
+
+    public Result IfExpression()
+    {
+        int ifPosition = index - 1;
+        Result conditionResult = Expression();
+        Result ifExpressionResult = null!;
+        if (conditionResult.GetType() != TokenType.Bool)
+        {
+            System.Console.WriteLine($"SEMANTIC ERROR: can't implicity convert the type {conditionResult.GetType()} into bool");
+            Environment.Exit(0);
+        }
+
+
+        if (Bool(conditionResult) == true)
+        {
+            if (currentToken.GetType() == TokenType.IfKeyWord)
+            {
+                Move(1);
+                ifExpressionResult = IfExpression();
+            }
+            else
+            {
+                ifExpressionResult = Expression();
+            }
+        }
+        else
+        {
+            index = ElsePosition(ifPosition);
+            currentToken = tokens[index];
+
+            if (currentToken.GetType() == TokenType.IfKeyWord)
+            {
+                Move(1);
+                ifExpressionResult = IfExpression();
+            }
+            else
+            {
+                ifExpressionResult = Expression();
+            }
+        }
+        return ifExpressionResult;
+    }
+
+    void CreateVariable()
+    {
+        int letPosition = index - 1;
+        VarProcess();
+        while (currentToken.GetType() == TokenType.CommaIndicator)
+        {
+            Move(1);
+            VarProcess();
+        }
+        index = InPosition(letPosition);
+        currentToken = tokens[index];
+    }
+    void VarProcess()
+    {
+        if (currentToken.GetType() != TokenType.Identifier)
+        {
+            System.Console.WriteLine("SYNTAX ERROR!: there must be an identifier to name a variable with.");
+            Environment.Exit(0);
+        }
+
+        string name = currentToken.GetName().ToString()!;
+        Move(1);
+        if (currentToken.GetType() != TokenType.EqualsOperator)
+        {
+            System.Console.WriteLine("SYNTAX ERROR!: there must be an asignation operator after declaring a variable");
+            Environment.Exit(0);
+        }
+        Move(1);
+        if (currentToken.GetType() == TokenType.LetKeyWord)
+        {
+            System.Console.WriteLine("SYNTAX ERROR! invalid expression term \"let\"");
+            Environment.Exit(0);
+        }
+        Result variable = Expression();
+        Storage.variables.Add(name.ToString(), new VarToken(variable.GetType(), variable.GetValue(), name));
+    }
+
+    void CreateFunction()
+    {
+        List<Token> args = new List<Token>();
+        List<Token> body = new List<Token>();
+
+        if (currentToken.GetType() != TokenType.Identifier)
+        {
+            System.Console.WriteLine("SYNTAX ERROR! functions must have a name");
+            Environment.Exit(0);
+        }
+        string functionName = currentToken.GetName();
+        Move(1);
+        if (currentToken.GetType() != TokenType.LeftParenthesisIndicator)
+        {
+            System.Console.WriteLine("SYNTAX ERROR! left parenthesis missing");
+            Environment.Exit(0);
+        }
+        AddArgs();
+        while (currentToken.GetType() == TokenType.CommaIndicator)
+        {
+            AddArgs();
+        }
+        if (currentToken.GetType() != TokenType.RightParenthesisIndicator)
+        {
+            System.Console.WriteLine("SYNTAX ERROR! right parenthesis missing");
+            Environment.Exit(0);
+        }
+        Move(1);
+        if (currentToken.GetType() != TokenType.PointerOperator)
+        {
+            System.Console.WriteLine("SYNTAX ERROR! pointer missing");
+            Environment.Exit(0);
+        }
+        while (index < tokens.Count)
+        {
+            AddBody();
+        }
+
+        void AddArgs()
+        {
+            Move(1);
+            args.Add(currentToken);
+            Move(1);
+        }
+        void AddBody()
+        {
+            Move(1);
+            body.Add(currentToken);
+            Move(1);
+        }
+
+        Storage.functions.Add(functionName, new Function(functionName, args, body));
+
+
+    }
+
+    Result EvaluateFunction(Function function)
+    {
+        Result functionResult = new Result(TokenType.Null, null);
+        List<Token> tokens = new List<Token>();
+        /* 
+        el objeto funcion tiene una lista de argumentos y una lista de instrucciones.
+        la lista de argumentos lo que tiene son variables que se van a usar en el cuerpo
+        de la funcion.
+        por lo tanto, como la funcion tiene la forma name(valorarg1, valorarg2);
+        lo que va a pasar es que a cada elemento de la lista de argumentos le va a corresponder
+        el valor dado en el mismo orden 
+        */
+
+
+        Parser parser = new Parser(tokens);
+        functionResult = parser.Analyze();
+
+        return functionResult;
+    }
+    #endregion
 }
