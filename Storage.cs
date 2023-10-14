@@ -1,8 +1,10 @@
 namespace Interpreter;
 public static class Storage
 {
-    public static Dictionary<string, VarToken> variables = new Dictionary<string, VarToken>();
+    public static List< Dictionary<string, VarToken>> variables = new List<Dictionary<string, VarToken>>();
     public static Dictionary<string, Function> functions = new Dictionary<string, Function>();
+    
+
 }
 
 

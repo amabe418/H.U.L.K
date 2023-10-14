@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Reflection.Metadata.Ecma335;
 
 namespace Interpreter;
@@ -7,6 +8,7 @@ public class Parser
 {
     private List<Token> tokens;
     private int index;
+    private int varDict = -1;
     private Token currentToken;
 
     public Parser(List<Token> Tokens)
@@ -41,7 +43,7 @@ public class Parser
         {
             return true;
         }
-        else /* (option.GetValue().ToString() == "false") return false; */
+        else
         {
             return false;
         }
@@ -105,6 +107,7 @@ public class Parser
     #region ParsingMethod
     public Result Expression()
     {
+
         Result expressionResult = PreviousExpression();
         while (index < tokens.Count && (currentToken.GetType() == TokenType.AndOperator || currentToken.GetType() == TokenType.OrOperator))
         {
@@ -128,9 +131,10 @@ public class Parser
             else
             {
                 System.Console.WriteLine("SYNTAX ERROR!: And or Or comparisons can only be performed between boolean expressions");
+                throw new Exception();
             }
         }
-        Storage.variables.Clear();
+
         return expressionResult;
     }
     public Result PreviousExpression()
@@ -152,7 +156,7 @@ public class Parser
                     else
                     {
                         System.Console.WriteLine("SYNTAX ERROR!: Comparisons can't be performed between different DataTypes");
-                        Environment.Exit(0);
+                        throw new Exception();
                     }
                     break;
 
@@ -165,7 +169,7 @@ public class Parser
                     else
                     {
                         System.Console.WriteLine("SYNTAX ERROR!: Comparisons can't be performed between different DataTypes");
-                        Environment.Exit(0);
+                        throw new Exception();
                     }
                     break;
 
@@ -178,7 +182,7 @@ public class Parser
                     else
                     {
                         System.Console.WriteLine("SYNTAX ERROR!: Comparisons can't be performed between DataTypes different to number");
-                        Environment.Exit(0);
+                        throw new Exception();
                     }
                     break;
 
@@ -191,7 +195,7 @@ public class Parser
                     else
                     {
                         System.Console.WriteLine("SEMANTIC ERROR!: Comparisons can't be performed between DataTypes different to number");
-                        Environment.Exit(0);
+                        throw new Exception();
                     }
                     break;
 
@@ -204,7 +208,7 @@ public class Parser
                     else
                     {
                         System.Console.WriteLine("SEMANTIC ERROR!: Comparisons can't be performed between DataTypes different to number");
-                        Environment.Exit(0);
+                        throw new Exception();
                     }
                     break;
 
@@ -217,7 +221,7 @@ public class Parser
                     else
                     {
                         System.Console.WriteLine("SEMANTIC ERROR!: Comparisons can't be performed between DataTypes different to number");
-                        Environment.Exit(0);
+                        throw new Exception();
                     }
                     break;
 
@@ -242,7 +246,7 @@ public class Parser
             else
             {
                 System.Console.WriteLine("SYNTAX ERROR!: Data types that are neither numbers or strings can't be concatenated");
-                Environment.Exit(0);
+                throw new Exception();
             }
         }
         return basicExpressionResult;
@@ -272,7 +276,7 @@ public class Parser
             else
             {
                 System.Console.WriteLine("SYNTAX ERROR! Mathematical operations can't be performed between data types that are not numerical");
-                Environment.Exit(0);
+                throw new Exception();
             }
 
         }
@@ -305,7 +309,7 @@ public class Parser
             else
             {
                 System.Console.WriteLine("SYNTAX ERROR! Mathematical operations can't be performed between data types that are not numerical");
-                Environment.Exit(0);
+                throw new Exception();
             }
         }
 
@@ -318,7 +322,7 @@ public class Parser
     public Result Factor()
     {
         Result factorResult = Base();
-        Move(1);
+
         while (index < tokens.Count && (currentToken.GetType() == TokenType.PowerOperator))
         {
             Token op = currentToken;
@@ -331,7 +335,7 @@ public class Parser
             else
             {
                 System.Console.WriteLine("SYNTAX ERROR! Mathematical operations can't be performed between data types that are not numerical");
-                Environment.Exit(0);
+                throw new Exception();
             }
         }
 
@@ -351,21 +355,25 @@ public class Parser
             case TokenType.Number:
                 baseResult.SetValue(currentToken.GetValue());
                 baseResult.SetType(TokenType.Number);
+                Move(1);
                 break;
 
             case TokenType.String:
                 baseResult.SetValue(currentToken.GetValue());
                 baseResult.SetType(TokenType.String);
+                Move(1);
                 break;
 
             case TokenType.TrueKeyWord:
                 baseResult.SetValue(true);
                 baseResult.SetType(TokenType.Bool);
+                Move(1);
                 break;
 
             case TokenType.FalseKeyWord:
                 baseResult.SetValue(false);
                 baseResult.SetType(TokenType.Bool);
+                Move(1);
                 break;
 
             case TokenType.PlusOperator:
@@ -379,9 +387,9 @@ public class Parser
                 else
                 {
                     System.Console.WriteLine("SYNTAX ERROR! Mathematical operations can't be performed between data types that are not numerical");
-                    Environment.Exit(0);
+                    throw new Exception();
                 }
-
+                Move(1);
                 break;
 
             case TokenType.MinusOperator:
@@ -395,18 +403,19 @@ public class Parser
                 else
                 {
                     System.Console.WriteLine("SYNTAX ERROR! Mathematical operations can't be performed between data types that are not numerical");
-                    Environment.Exit(0);
+                    throw new Exception();
                 }
+                Move(1);
                 break;
             case TokenType.LeftParenthesisIndicator:
                 Move(1);
                 baseResult = Expression();
-
                 if (currentToken.GetType() != TokenType.RightParenthesisIndicator)
                 {
                     System.Console.WriteLine("SYNTAX ERROR: Right parenthesis expected");
-                    Environment.Exit(0);
+                    throw new Exception();
                 }
+                Move(1);
                 break;
             case TokenType.NonOperator:
                 Move(1);
@@ -427,48 +436,51 @@ public class Parser
                 if (currentToken.GetType() != TokenType.LeftParenthesisIndicator)
                 {
                     System.Console.WriteLine("SYNTAX ERROR: Left parenthesis expected.");
-                    Environment.Exit(0);
-
+                    throw new Exception();
                 }
                 else
                 {
                     baseResult = IfExpression();
+                    Move(1);
                 }
                 break;
             case TokenType.LetKeyWord:
                 Move(1);
-                CreateVariable();
-                baseResult = Expression();
+                baseResult = Variable();
                 break;
             case TokenType.Identifier:
-                if (Storage.variables.ContainsKey(currentToken.GetName().ToString()!))
+                if (varDict > -1)
                 {
-                    baseResult.SetType(Storage.variables[currentToken.GetName().ToString()!].GetType());
-                    baseResult.SetValue(Storage.variables[currentToken.GetName().ToString()!].GetValue());
-
+                    for (int i = varDict; i >= 0; i--)
+                    {
+                        if (Storage.variables[i].ContainsKey(currentToken.GetName().ToString()!))
+                        {
+                            baseResult.SetType(Storage.variables[i][currentToken.GetName().ToString()!].GetType());
+                            baseResult.SetValue(Storage.variables[i][currentToken.GetName().ToString()!].GetValue());
+                            Move(1);
+                        }
+                    }
                 }
                 else if (Storage.functions.ContainsKey(currentToken.GetName().ToString()))
                 {
                     baseResult = EvaluateFunction(Storage.functions[currentToken.GetName()]);
+                    Move(1);
                 }
                 else
                 {
                     System.Console.WriteLine("SYNTAX ERROR: The identifier doesn't exist in the current context");
-                    Environment.Exit(0);
+                    throw new Exception();
                 }
-
-
                 break;
             case TokenType.FunctionKeyWord:
                 Move(1);
                 CreateFunction();
                 System.Console.WriteLine("function created succesfully");
-                Environment.Exit(0);
                 break;
 
             default:
                 System.Console.WriteLine("not expected token");
-                Environment.Exit(0);
+                throw new Exception();
                 break;
         }
 
@@ -483,7 +495,7 @@ public class Parser
         if (conditionResult.GetType() != TokenType.Bool)
         {
             System.Console.WriteLine($"SEMANTIC ERROR: can't implicity convert the type {conditionResult.GetType()} into bool");
-            Environment.Exit(0);
+            throw new Exception();
         }
 
 
@@ -517,41 +529,56 @@ public class Parser
         return ifExpressionResult;
     }
 
-    void CreateVariable()
+    Result Variable()
     {
         int letPosition = index - 1;
+        Dictionary<string, VarToken> scopedVariables = new Dictionary<string, VarToken>();
         VarProcess();
+        int amount = 1;
         while (currentToken.GetType() == TokenType.CommaIndicator)
         {
             Move(1);
             VarProcess();
+            amount++;
         }
+        varDict++;
+        Storage.variables.Add(scopedVariables);
         index = InPosition(letPosition);
         currentToken = tokens[index];
-    }
-    void VarProcess()
-    {
-        if (currentToken.GetType() != TokenType.Identifier)
-        {
-            System.Console.WriteLine("SYNTAX ERROR!: there must be an identifier to name a variable with.");
-            Environment.Exit(0);
-        }
+        Result varResult = Expression();
+        /*  while (amount > 0)
+         {
+             Storage.variables.Remove(Storage.variables.ElementAt(Storage.variables.Count() - amount).Key);
+             amount--;
+         } */
+        Storage.variables.RemoveAt(varDict);
+        varDict -= 1;
+        return varResult;
 
-        string name = currentToken.GetName().ToString()!;
-        Move(1);
-        if (currentToken.GetType() != TokenType.EqualsOperator)
+        void VarProcess()
         {
-            System.Console.WriteLine("SYNTAX ERROR!: there must be an asignation operator after declaring a variable");
-            Environment.Exit(0);
+            if (currentToken.GetType() != TokenType.Identifier)
+            {
+                System.Console.WriteLine("SYNTAX ERROR!: there must be an identifier to name a variable with.");
+                throw new Exception();
+            }
+
+            string name = currentToken.GetName().ToString()!;
+            Move(1);
+            if (currentToken.GetType() != TokenType.EqualsOperator)
+            {
+                System.Console.WriteLine("SYNTAX ERROR!: there must be an asignation operator after declaring a variable");
+                throw new Exception();
+            }
+            Move(1);
+            if (currentToken.GetType() == TokenType.LetKeyWord)
+            {
+                System.Console.WriteLine("SYNTAX ERROR! invalid expression term \"let\"");
+                throw new Exception();
+            }
+            Result variable = Expression();
+            scopedVariables.Add(name.ToString(), new VarToken(variable.GetType(), variable.GetValue(), name));
         }
-        Move(1);
-        if (currentToken.GetType() == TokenType.LetKeyWord)
-        {
-            System.Console.WriteLine("SYNTAX ERROR! invalid expression term \"let\"");
-            Environment.Exit(0);
-        }
-        Result variable = Expression();
-        Storage.variables.Add(name.ToString(), new VarToken(variable.GetType(), variable.GetValue(), name));
     }
 
     void CreateFunction()
@@ -562,14 +589,14 @@ public class Parser
         if (currentToken.GetType() != TokenType.Identifier)
         {
             System.Console.WriteLine("SYNTAX ERROR! functions must have a name");
-            Environment.Exit(0);
+            throw new Exception();
         }
         string functionName = currentToken.GetName();
         Move(1);
         if (currentToken.GetType() != TokenType.LeftParenthesisIndicator)
         {
             System.Console.WriteLine("SYNTAX ERROR! left parenthesis missing");
-            Environment.Exit(0);
+            throw new Exception();
         }
         AddArgs();
         while (currentToken.GetType() == TokenType.CommaIndicator)
@@ -579,14 +606,15 @@ public class Parser
         if (currentToken.GetType() != TokenType.RightParenthesisIndicator)
         {
             System.Console.WriteLine("SYNTAX ERROR! right parenthesis missing");
-            Environment.Exit(0);
+            throw new Exception();
         }
         Move(1);
         if (currentToken.GetType() != TokenType.PointerOperator)
         {
             System.Console.WriteLine("SYNTAX ERROR! pointer missing");
-            Environment.Exit(0);
+            throw new Exception();
         }
+        Move(1);
         while (index < tokens.Count)
         {
             AddBody();
@@ -600,7 +628,6 @@ public class Parser
         }
         void AddBody()
         {
-            Move(1);
             body.Add(currentToken);
             Move(1);
         }
@@ -612,7 +639,7 @@ public class Parser
 
     Result EvaluateFunction(Function function)
     {
-        Result functionResult = new Result(TokenType.Null, null);
+        Result functionResult = new Result(TokenType.Null, null!);
         List<Token> tokens = new List<Token>();
         /* 
         el objeto funcion tiene una lista de argumentos y una lista de instrucciones.
@@ -622,12 +649,61 @@ public class Parser
         lo que va a pasar es que a cada elemento de la lista de argumentos le va a corresponder
         el valor dado en el mismo orden 
         */
+        Move(1);
+        if (currentToken.GetType() != TokenType.LeftParenthesisIndicator)
+        {
+            System.Console.WriteLine("SYNTAX ERROR! there must be a left parenthesis to declare the arguments of the function");
+        }
+        Move(1);
+        if (currentToken.GetType() == TokenType.RightParenthesisIndicator)
+        {
+            System.Console.WriteLine("SYNTAX ERROR! there must be an argument fot the function");
+        }
 
+        Dictionary<string, Token> argsValue = new Dictionary<string, Token>();
+        Result arg = new Result(TokenType.Null, null!);
+        Token token = new DataType(TokenType.Null, null!);
+        GetArgs();
+        GetTokens();
 
         Parser parser = new Parser(tokens);
+        System.Console.WriteLine(String.Join('\n', tokens));
         functionResult = parser.Analyze();
-
         return functionResult;
+
+        void GetArgs()
+        {
+            for (int i = 0; i < function.Argument.Count; i++)
+            {
+                arg = Expression();
+                token.SetValue(arg.GetValue());
+                token.SetType(arg.GetType());
+                argsValue.Add(function.Argument[i].GetName(), token);
+                Move(1);
+            }
+        }
+
+        void GetTokens()
+        {
+            for (int i = 0; i < function.Body.Count; i++)
+            {
+                if (function.Body[i].GetType() == TokenType.Identifier)
+                {
+                    if (argsValue.ContainsKey(function.Body[i].GetName()))
+                    {
+                        tokens.Add(argsValue[function.Body[i].GetName()]);
+                    }
+                    else
+                    {
+                        tokens.Add(function.Body[i]);
+                    }
+                }
+                else
+                {
+                    tokens.Add(function.Body[i]);
+                }
+            }
+        }
     }
-    #endregion
 }
+#endregion

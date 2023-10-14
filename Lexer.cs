@@ -314,21 +314,23 @@ public class Lexer
 
 
         if (leftParenthesis != rightParenthesis)
-        {
-            System.Console.WriteLine("LEXICAL ERROR: not balanced parenthesis");
-            Environment.Exit(0);
+        {   
+
+            Console.WriteLine("LEXICAL ERROR: not balanced parenthesis");
+            throw new Exception();
+            
         }
 
         if (ifToken != elseToken)
         {
-            System.Console.WriteLine("SYNTAX ERROR: there's an 'else' expression missing");
-            Environment.Exit(0);
+            Console.WriteLine("SYNTAX ERROR: there's an 'else' expression missing");
+             throw new Exception();
         }
 
         if (tokens.ElementAt(tokens.Count - 1).GetType() != TokenType.SemicolonIndicator)
         {
             System.Console.WriteLine("LEXICAL ERROR: ; expected ");
-            Environment.Exit(0);
+            throw new Exception();
         }
 
         return tokens;

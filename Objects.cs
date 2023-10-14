@@ -11,12 +11,14 @@ public abstract class Token
     }
 
     public virtual TokenType GetType() => Type;
-
+     public virtual void SetType(TokenType type) => Type= type;
     public abstract object GetValue();
 
     public virtual string GetName() => throw new NotImplementedException();
 
     public abstract void SetValue(object value);
+
+    
 
 }
 
@@ -37,7 +39,8 @@ public class Operator : Token
     {
         throw new NotImplementedException();
     }
-
+     
+    
     public override string ToString() => $"{Type}";
 }
 
@@ -159,9 +162,9 @@ public class Result
 public class Function
 {
     string Name { get; set; }
-    List<Token> Argument { get; set; }
+     public List<Token> Argument { get; set; }
 
-    List<Token> Body { get; set; }
+    public List<Token> Body { get; set; }
 
 
     public Function(string name, List<Token> arg, List<Token> body)
@@ -171,7 +174,7 @@ public class Function
         Body = body;
     }
 
-    int GetArgsAmount()
+    public int GetArgsAmount()
     {
         int amount = 0;
         foreach (var item in Argument)
