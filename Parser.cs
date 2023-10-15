@@ -667,7 +667,6 @@ public class Parser
         GetTokens();
 
         Parser parser = new Parser(tokens);
-        System.Console.WriteLine(String.Join('\n', tokens));
         functionResult = parser.Analyze();
         return functionResult;
 
