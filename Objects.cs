@@ -1,8 +1,13 @@
 namespace Interpreter;
-
+// en esta clase estan los tipos de objetos que se utilizan en el proyecto.
+// las clases que heredan de token fueron hechos para diferenciar los posibles tipos de datos
+// con los que es posible trabajar en este lenguaje.
 public abstract class Token
 {
-
+    /* 
+     este objeto token solo tiene un tipo, y todos los tokens que hereden de el 
+     tambien lo tendran  
+    */
     private TokenType Type { get; set; }
 
     public Token(TokenType type)
@@ -11,17 +16,18 @@ public abstract class Token
     }
 
     public virtual TokenType GetType() => Type;
-     public virtual void SetType(TokenType type) => Type= type;
+    public virtual void SetType(TokenType type) => Type = type;
     public abstract object GetValue();
 
     public virtual string GetName() => throw new NotImplementedException();
 
     public abstract void SetValue(object value);
 
-    
+
 
 }
 
+//esta clase esta hecha para los operdores +-<>=  ,etc.
 public class Operator : Token
 {
     TokenType Type { get; set; }
@@ -39,11 +45,12 @@ public class Operator : Token
     {
         throw new NotImplementedException();
     }
-     
-    
+
+
     public override string ToString() => $"{Type}";
 }
 
+// esta para los indicadores ();
 public class Indicator : Token
 {
     TokenType Type { get; set; }
@@ -64,7 +71,9 @@ public class Indicator : Token
 
     public override string ToString() => $"{Type}";
 }
-
+ 
+ // esta es para las palabras reservadas del lenguaje, 
+ // como function, true, if, else.
 public class KeyWord : Token
 {
     TokenType Type { get; set; }
@@ -86,6 +95,7 @@ public class KeyWord : Token
     public override string ToString() => $"{Type}";
 }
 
+// este es para tipos de datos, como podria ser un numero, un bool.
 public class DataType : Token
 {
     private object Value { get; set; }
@@ -107,7 +117,7 @@ public class DataType : Token
     }
 }
 
-
+// esta es para las variables.
 public class VarToken : DataType
 {
     private string Name { get; set; }
@@ -130,6 +140,9 @@ public class VarToken : DataType
     }
 }
 
+// esta espara el objeto result, que es el tipo de dato con el que trabaja el parser
+// tiene un  tipo y un valor, el tipo lo vi necesario para revisar si era posible realizar operaciones
+// entre los distintos resultados que se fueran obteniendo. 
 public class Result
 {
     TokenType type { get; set; }
@@ -158,11 +171,11 @@ public class Result
 
 
 }
-
+// este es el objeto funcion, tiene un nombre, una lista de tokens que serian sus argumentos, y otra que seria su cuerpo.
 public class Function
 {
     string Name { get; set; }
-     public List<Token> Argument { get; set; }
+    public List<Token> Argument { get; set; }
 
     public List<Token> Body { get; set; }
 
@@ -173,19 +186,5 @@ public class Function
         Argument = arg;
         Body = body;
     }
-
-    public int GetArgsAmount()
-    {
-        int amount = 0;
-        foreach (var item in Argument)
-        {
-            if (item.GetType() == TokenType.CommaIndicator)
-            {
-             amount++;
-            }
-        }
-        return amount;
-    }
-
 
 }

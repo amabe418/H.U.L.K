@@ -15,6 +15,9 @@ namespace Interpreter;
    -identificadores
    -puntuadores
    -operadores
+
+  Recibe como parametros un string, que seria el input y crea una lista de tokens
+ con su tipo, nombre y valor.
 */
 
 public class Lexer
@@ -30,16 +33,21 @@ public class Lexer
         this.code = sourceCode;
         currentPosition = 0;
         currentChar = code[currentPosition];
-
     }
 
+    //este metodo es para moverse al siguiente caracter del input
+    // para analizarlo.
     private void Move(int positions)
     {
         currentPosition += positions;
         if (currentPosition < code.Length)
+        {
             currentChar = code[currentPosition];
+        }
     }
 
+    //este es el tokenizador, es el que va creando los tokens 
+    //y definiendo sus posibles tipos y valores.
     public List<Token> Tokenize()
     {
         List<Token> tokens = new List<Token>();
@@ -50,7 +58,6 @@ public class Lexer
 
         while (currentPosition < code.Length)
         {
-
             if (char.IsWhiteSpace(currentChar))
             {
                 Move(1);
@@ -92,7 +99,7 @@ public class Lexer
         #region AuxiliarMethods
 
 
-
+        // este metodo agrega digitos y forma con ellos un token siempre hy cuando sea posible.
         void AddNumber()
         {
             string number = "";
@@ -103,13 +110,15 @@ public class Lexer
             }
             tokens.Add(new DataType(TokenType.Number, number));
         }
-
+        // este es para ver si es un posible operador.
         bool IsOperator()
         {
 
             return "+-*/^=<>@|&!".Contains(currentChar);
         }
-
+        // como pueden haber finitos operadores y todos estan ya definitos
+        // este mtodo es para agregar operadores y ver su tipo, los posibles tipos de operadores 
+        // se encuentran en el enum TokenType.
         void AddOperator()
         {
             switch (currentChar)
@@ -214,7 +223,8 @@ public class Lexer
             }
 
         }
-
+      // este es para crear un token de tipo identificador, tambien revisa si es una palabra reservada
+      // y si no lo es, entonces es un nombre de variable o de funcion, dependiendo del contexto.
         void AddIdentifier()
         {
             string identifier = "";
@@ -275,11 +285,10 @@ public class Lexer
         {
             return "(),;".Contains(currentChar);
         }
-
+        // este es para agrerar indicadores, los posibles indicadores son los que 
+        //se ven arriba.
         void AddIndicator()
         {
-
-
             switch (currentChar)
             {
                 case '(':
@@ -303,28 +312,22 @@ public class Lexer
                     tokens.Add(new Indicator(TokenType.SemicolonIndicator));
                     Move(1);
                     break;
-
             }
-
         }
 
-
         #endregion
-
-
-
+        // esta parte es oara verificar que se encuentren en correcto orden 
+        //los if-else expressions y los parentesis. 
         if (leftParenthesis != rightParenthesis)
-        {   
-
+        {
             Console.WriteLine("LEXICAL ERROR: not balanced parenthesis");
             throw new Exception();
-            
         }
 
         if (ifToken != elseToken)
         {
             Console.WriteLine("SYNTAX ERROR: there's an 'else' expression missing");
-             throw new Exception();
+            throw new Exception();
         }
 
         if (tokens.ElementAt(tokens.Count - 1).GetType() != TokenType.SemicolonIndicator)
@@ -332,8 +335,6 @@ public class Lexer
             System.Console.WriteLine("LEXICAL ERROR: ; expected ");
             throw new Exception();
         }
-
         return tokens;
-
     }
 }

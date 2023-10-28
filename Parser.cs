@@ -2,7 +2,11 @@ using System.Diagnostics;
 using System.Reflection.Metadata.Ecma335;
 
 namespace Interpreter;
-
+/* 
+ esta clase es la encargada de analizar, interpretar y ejercutar el input una vez tokenizado.
+ el analisis lexico, sintactico y semantico se van realizando a medida que se va avanzando 
+ en la interpretacion del input. 
+  */
 
 public class Parser
 {
@@ -24,10 +28,8 @@ public class Parser
 
     }
 
-
-
-    #region AuxiliarMethods
-
+    #region AuxiliarMethods 
+    //en esta region se implementan las operaciones.
     private void Move(int position)
     {
         index += position;
@@ -49,7 +51,9 @@ public class Parser
         }
     }
 
-
+    // para cada if, debe haber un else correspondiente, por lo tanto, 
+    // si se necesita devolver la expresion despues del else, este metodo es para posicionarse en
+    // el else que le corresponde al if que se estaba analizando.
     public int ElsePosition(int ifPosition)
     {
         int position = int.MinValue;
@@ -75,6 +79,8 @@ public class Parser
         }
         return position + 1;
     }
+    // con el in pasa lo mismo que con el else, una vez revisado y ejecutado 
+    // la expresion del let, este metodo se posiciona en el in que le corresponde a ese let.
     public int InPosition(int ifPosition)
     {
         int position = int.MinValue;
@@ -481,7 +487,7 @@ public class Parser
             default:
                 System.Console.WriteLine("not expected token");
                 throw new Exception();
-                break;
+
         }
 
         return baseResult;
@@ -639,8 +645,6 @@ public class Parser
 
     Result EvaluateFunction(Function function)
     {
-        Result functionResult = new Result(TokenType.Null, null!);
-        List<Token> tokens = new List<Token>();
         /* 
         el objeto funcion tiene una lista de argumentos y una lista de instrucciones.
         la lista de argumentos lo que tiene son variables que se van a usar en el cuerpo
@@ -649,23 +653,31 @@ public class Parser
         lo que va a pasar es que a cada elemento de la lista de argumentos le va a corresponder
         el valor dado en el mismo orden 
         */
+        Result functionResult = new Result(TokenType.Null, null!);
+        List<Token> tokens = new List<Token>();
         Move(1);
         if (currentToken.GetType() != TokenType.LeftParenthesisIndicator)
         {
             System.Console.WriteLine("SYNTAX ERROR! there must be a left parenthesis to declare the arguments of the function");
+            throw new Exception();
         }
         Move(1);
         if (currentToken.GetType() == TokenType.RightParenthesisIndicator)
         {
             System.Console.WriteLine("SYNTAX ERROR! there must be an argument fot the function");
+            throw new Exception();
         }
 
         Dictionary<string, Token> argsValue = new Dictionary<string, Token>();
         Result arg = new Result(TokenType.Null, null!);
         Token token = new DataType(TokenType.Null, null!);
         GetArgs();
+        if (argsValue.Count != function.Argument.Count)
+        {
+            System.Console.WriteLine("wrong amount of arguments were given");
+            throw new Exception();
+        }
         GetTokens();
-
         Parser parser = new Parser(tokens);
         functionResult = parser.Analyze();
         return functionResult;
