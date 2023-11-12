@@ -114,7 +114,7 @@ public class Lexer
         bool IsOperator()
         {
 
-            return "+-*/^=<>@|&!".Contains(currentChar);
+            return "+-*/^=<>@|&!%".Contains(currentChar);
         }
         // como pueden haber finitos operadores y todos estan ya definitos
         // este mtodo es para agregar operadores y ver su tipo, los posibles tipos de operadores 
@@ -140,6 +140,10 @@ public class Lexer
 
                 case '/':
                     tokens.Add(new Operator(TokenType.DivideOperator));
+                    Move(1);
+                    break;
+                case '%':
+                    tokens.Add(new Operator(TokenType.ModuleOperator));
                     Move(1);
                     break;
 
@@ -223,8 +227,8 @@ public class Lexer
             }
 
         }
-      // este es para crear un token de tipo identificador, tambien revisa si es una palabra reservada
-      // y si no lo es, entonces es un nombre de variable o de funcion, dependiendo del contexto.
+        // este es para crear un token de tipo identificador, tambien revisa si es una palabra reservada
+        // y si no lo es, entonces es un nombre de variable o de funcion, dependiendo del contexto.
         void AddIdentifier()
         {
             string identifier = "";

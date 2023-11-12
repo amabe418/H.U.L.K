@@ -1,7 +1,7 @@
 namespace Interpreter;
 public static class Storage
 {
-    public static List< Dictionary<string, VarToken>> variables = new List<Dictionary<string, VarToken>>();
+    public static List< Dictionary<string, Token>> variables = new List<Dictionary<string, Token>>();
     public static Dictionary<string, Function> functions = new Dictionary<string, Function>();
     
 
@@ -15,6 +15,7 @@ public enum TokenType
     MinusOperator, //-
     MultOperator, // *
     DivideOperator, // /
+    ModuleOperator, //%
     PowerOperator, //^
     EqualsOperator, // =
     DoubleEqualsOperator, // ==

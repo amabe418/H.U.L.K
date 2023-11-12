@@ -12,7 +12,7 @@ public class Parser
 {
     private List<Token> tokens;
     private int index;
-    private int varDict = -1;
+    private int varDict = Storage.variables.Count;
     private Token currentToken;
 
     public Parser(List<Token> Tokens)
@@ -111,6 +111,20 @@ public class Parser
 
 
     #region ParsingMethod
+
+    /*
+    en esta region se encuentran los metodos ordenados por la jerarquia.
+    los niveles son:
+    Expression: para expresiones && y || booleanas.
+    PreviousExpression: para expresiones <, >, <=, >=, ==.
+    BasicExpression: es para concatenar strings.
+    Addend: es para las operacones + y -.
+    Term: es para *, /, %(tengo que hacer esto)
+    Factor: es para ^.
+    Base: para el ultimo nivel, o sea, un numero, un string, un bool, 
+          una funcion, una variable, una expresion if-else, o una let-in. 
+
+ */
     public Result Expression()
     {
 
@@ -237,6 +251,8 @@ public class Parser
 
         return previousExpressionResult;
     }
+
+    /* este metodo es para concatenar en caso de que sea necesario */
     public Result BasicExpression()
     {
         Result basicExpressionResult = Addend();
@@ -259,7 +275,7 @@ public class Parser
     }
 
 
-    /* este metodo es para concatenar en caso de que sea necesario */
+
     public Result Addend()
     {
         Result addendResult = Term();
@@ -295,7 +311,7 @@ public class Parser
     public Result Term()
     {
         Result termResult = Factor();
-        while (index < tokens.Count && (currentToken.GetType() == TokenType.MultOperator || currentToken.GetType() == TokenType.DivideOperator))
+        while (index < tokens.Count && (currentToken.GetType() == TokenType.MultOperator || currentToken.GetType() == TokenType.DivideOperator || currentToken.GetType() == TokenType.ModuleOperator))
         {
             Token op = currentToken;
             Move(1);
@@ -309,8 +325,19 @@ public class Parser
                 }
                 if (op.GetType() == TokenType.DivideOperator)
                 {
-                    termResult.SetValue(double.Parse(termResult.GetValue().ToString()!) * double.Parse(factor.GetValue().ToString()!));
+                    if (double.Parse(factor.GetValue().ToString()!) == 0)
+                    {
+                        System.Console.WriteLine("SEMANTIC ERROR: Divide opration cannot be applied by cero.");
+                        throw new Exception();
+                    }
+                    termResult.SetValue(double.Parse(termResult.GetValue().ToString()!) / double.Parse(factor.GetValue().ToString()!));
                 }
+                if (op.GetType() == TokenType.ModuleOperator)
+                {
+                    termResult.SetValue(double.Parse(termResult.GetValue().ToString()!) % double.Parse(factor.GetValue().ToString()!));
+                }
+
+
             }
             else
             {
@@ -455,9 +482,9 @@ public class Parser
                 baseResult = Variable();
                 break;
             case TokenType.Identifier:
-                if (varDict > -1)
+                if (varDict > 0)
                 {
-                    for (int i = varDict; i >= 0; i--)
+                    for (int i = varDict-1; i >= 0; i--)
                     {
                         if (Storage.variables[i].ContainsKey(currentToken.GetName().ToString()!))
                         {
@@ -538,7 +565,7 @@ public class Parser
     Result Variable()
     {
         int letPosition = index - 1;
-        Dictionary<string, VarToken> scopedVariables = new Dictionary<string, VarToken>();
+        Dictionary<string, Token> scopedVariables = new Dictionary<string, Token>();
         VarProcess();
         int amount = 1;
         while (currentToken.GetType() == TokenType.CommaIndicator)
@@ -552,12 +579,7 @@ public class Parser
         index = InPosition(letPosition);
         currentToken = tokens[index];
         Result varResult = Expression();
-        /*  while (amount > 0)
-         {
-             Storage.variables.Remove(Storage.variables.ElementAt(Storage.variables.Count() - amount).Key);
-             amount--;
-         } */
-        Storage.variables.RemoveAt(varDict);
+        Storage.variables.RemoveAt(varDict-1);
         varDict -= 1;
         return varResult;
 
@@ -588,7 +610,11 @@ public class Parser
     }
 
     void CreateFunction()
-    {
+    {  /*
+        este metodo es para crear una funcion que se almacenara en una lsita de funciones.
+        este se encarga de recoger la plantlla de la funcion, su cuerpo, que sera una lista de tokens
+        y sus argumentos, que sera otra lista.  
+     */
         List<Token> args = new List<Token>();
         List<Token> body = new List<Token>();
 
@@ -652,9 +678,9 @@ public class Parser
         por lo tanto, como la funcion tiene la forma name(valorarg1, valorarg2);
         lo que va a pasar es que a cada elemento de la lista de argumentos le va a corresponder
         el valor dado en el mismo orden 
+        para evaluar la funcion se hara una nueva instancia de parser, ya que sera como volver a interpretar una lista
+        de tokens, que sera el cuerpo. 
         */
-        Result functionResult = new Result(TokenType.Null, null!);
-        List<Token> tokens = new List<Token>();
         Move(1);
         if (currentToken.GetType() != TokenType.LeftParenthesisIndicator)
         {
@@ -669,21 +695,24 @@ public class Parser
         }
 
         Dictionary<string, Token> argsValue = new Dictionary<string, Token>();
-        Result arg = new Result(TokenType.Null, null!);
-        Token token = new DataType(TokenType.Null, null!);
         GetArgs();
         if (argsValue.Count != function.Argument.Count)
         {
             System.Console.WriteLine("wrong amount of arguments were given");
             throw new Exception();
         }
-        GetTokens();
-        Parser parser = new Parser(tokens);
-        functionResult = parser.Analyze();
+        varDict++;
+        Storage.variables.Add(argsValue);
+        Parser parser = new Parser(function.Body);
+        Result functionResult = parser.Analyze();
+        Storage.variables.RemoveAt(varDict-1);
+        varDict -= 1;
         return functionResult;
 
         void GetArgs()
         {
+            Result arg = new Result(TokenType.Null, null!);
+            Token token = new DataType(TokenType.Null, null!);
             for (int i = 0; i < function.Argument.Count; i++)
             {
                 arg = Expression();
@@ -691,28 +720,6 @@ public class Parser
                 token.SetType(arg.GetType());
                 argsValue.Add(function.Argument[i].GetName(), token);
                 Move(1);
-            }
-        }
-
-        void GetTokens()
-        {
-            for (int i = 0; i < function.Body.Count; i++)
-            {
-                if (function.Body[i].GetType() == TokenType.Identifier)
-                {
-                    if (argsValue.ContainsKey(function.Body[i].GetName()))
-                    {
-                        tokens.Add(argsValue[function.Body[i].GetName()]);
-                    }
-                    else
-                    {
-                        tokens.Add(function.Body[i]);
-                    }
-                }
-                else
-                {
-                    tokens.Add(function.Body[i]);
-                }
             }
         }
     }
