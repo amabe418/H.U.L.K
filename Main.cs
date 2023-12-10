@@ -3,8 +3,8 @@ public static class Program
 {
     public static void Main(string[] args)
     {
-        Run();
-        //Test();
+        //Run();
+        Test();
     }
     
     static void Run()
@@ -31,8 +31,8 @@ public static class Program
     {
         string[] sourceCode = new string[2];
         
-        //"function amalia(a) => if(1>=a) 1 else amalia(a-1) + amalia(a-2);";
-        sourceCode[0] = "function amalia(x)=> x+1;";
+        //"function amalia(x)=> x+1;";
+        sourceCode[0] = "function amalia(a) => if(1>=a) 1 else amalia(a-1) + amalia(a-2);";
         sourceCode[1] = "amalia(4);";
         for (int i = 0; i < sourceCode.Length; i++)
         {

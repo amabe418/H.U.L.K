@@ -43,3 +43,18 @@
 /home/amalia/Documents/Programacion/proyectos/H.U.L.K/obj/Debug/net7.0/hulk.pdb
 /home/amalia/Documents/Programacion/proyectos/H.U.L.K/obj/Debug/net7.0/hulk.genruntimeconfig.cache
 /home/amalia/Documents/Programacion/proyectos/H.U.L.K/obj/Debug/net7.0/ref/hulk.dll
+/home/amalia/Documents/hulk toledo/H.U.L.K-main/bin/Debug/net7.0/hulk
+/home/amalia/Documents/hulk toledo/H.U.L.K-main/bin/Debug/net7.0/hulk.deps.json
+/home/amalia/Documents/hulk toledo/H.U.L.K-main/bin/Debug/net7.0/hulk.runtimeconfig.json
+/home/amalia/Documents/hulk toledo/H.U.L.K-main/bin/Debug/net7.0/hulk.dll
+/home/amalia/Documents/hulk toledo/H.U.L.K-main/bin/Debug/net7.0/hulk.pdb
+/home/amalia/Documents/hulk toledo/H.U.L.K-main/obj/Debug/net7.0/hulk.csproj.AssemblyReference.cache
+/home/amalia/Documents/hulk toledo/H.U.L.K-main/obj/Debug/net7.0/hulk.GeneratedMSBuildEditorConfig.editorconfig
+/home/amalia/Documents/hulk toledo/H.U.L.K-main/obj/Debug/net7.0/hulk.AssemblyInfoInputs.cache
+/home/amalia/Documents/hulk toledo/H.U.L.K-main/obj/Debug/net7.0/hulk.AssemblyInfo.cs
+/home/amalia/Documents/hulk toledo/H.U.L.K-main/obj/Debug/net7.0/hulk.csproj.CoreCompileInputs.cache
+/home/amalia/Documents/hulk toledo/H.U.L.K-main/obj/Debug/net7.0/hulk.dll
+/home/amalia/Documents/hulk toledo/H.U.L.K-main/obj/Debug/net7.0/refint/hulk.dll
+/home/amalia/Documents/hulk toledo/H.U.L.K-main/obj/Debug/net7.0/hulk.pdb
+/home/amalia/Documents/hulk toledo/H.U.L.K-main/obj/Debug/net7.0/hulk.genruntimeconfig.cache
+/home/amalia/Documents/hulk toledo/H.U.L.K-main/obj/Debug/net7.0/ref/hulk.dll
