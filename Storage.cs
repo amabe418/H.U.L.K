@@ -44,7 +44,12 @@ public enum TokenType
     IfKeyWord,
     ElseKeyWord,
     Null,
-    Bool
+    Bool,
+    Sin,
+    Cos,
+    Tan,
+    Print,
+    PI
 
 
 }

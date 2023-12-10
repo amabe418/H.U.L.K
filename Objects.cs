@@ -15,7 +15,7 @@ public abstract class Token
         Type = type;
     }
 
-    public virtual TokenType GetType() => Type;
+    public new virtual TokenType GetType() => Type;
     public virtual void SetType(TokenType type) => Type = type;
     public abstract object GetValue();
 
@@ -164,7 +164,7 @@ public class Result
         type = Type;
     }
 
-    public TokenType GetType() => type;
+    public new TokenType GetType() => type;
 
     public object GetValue() => value;
 

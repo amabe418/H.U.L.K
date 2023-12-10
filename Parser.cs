@@ -382,6 +382,7 @@ public class Parser
     public Result Base()
     {
         Result baseResult = new Result(TokenType.Null, null!);
+        Result temporal = new Result(TokenType.Null, null!);
 
         switch (currentToken.GetType())
         {
@@ -482,22 +483,26 @@ public class Parser
                 baseResult = Variable();
                 break;
             case TokenType.Identifier:
-                if (varDict > 0)
+                if (tokens[index + 1].GetType() == TokenType.LeftParenthesisIndicator)
                 {
-                    for (int i = varDict-1; i >= 0; i--)
+                    if (Storage.functions.ContainsKey(currentToken.GetName().ToString()))
+                    {
+                        baseResult = EvaluateFunction(Storage.functions[currentToken.GetName()]);
+                        // Move(1);
+                    }
+                }
+                else if (varDict > 0)
+                {
+                    for (int i = varDict - 1; i >= 0; i--)
                     {
                         if (Storage.variables[i].ContainsKey(currentToken.GetName().ToString()!))
                         {
                             baseResult.SetType(Storage.variables[i][currentToken.GetName().ToString()!].GetType());
                             baseResult.SetValue(Storage.variables[i][currentToken.GetName().ToString()!].GetValue());
                             Move(1);
+                            break;
                         }
                     }
-                }
-                else if (Storage.functions.ContainsKey(currentToken.GetName().ToString()))
-                {
-                    baseResult = EvaluateFunction(Storage.functions[currentToken.GetName()]);
-                    Move(1);
                 }
                 else
                 {
@@ -510,6 +515,87 @@ public class Parser
                 CreateFunction();
                 System.Console.WriteLine("function created succesfully");
                 break;
+            case TokenType.Sin:
+                Move(1);
+                if (currentToken.GetType() != TokenType.LeftParenthesisIndicator)
+                {
+                    throw new Exception("SYNTAX ERROR: left parenthesis missing");
+                }
+                if (tokens[index + 1].GetType() == TokenType.RightParenthesisIndicator)
+                {
+                    throw new Exception("SYNTAX ERROR: argument missing");
+                }
+                temporal = Expression();
+                if (temporal.GetType() != TokenType.Number)
+                {
+                    throw new Exception("ERROR: numerical argument expected");
+                }
+                baseResult.SetValue(Math.Sin(double.Parse(temporal.GetValue().ToString()!)));
+                baseResult.SetType(TokenType.Number);
+                break;
+            case TokenType.Cos:
+                Move(1);
+                if (currentToken.GetType() != TokenType.LeftParenthesisIndicator)
+                {
+                    throw new Exception("SYNTAX ERROR: left parenthesis missing");
+                }
+                if (tokens[index + 1].GetType() == TokenType.RightParenthesisIndicator)
+                {
+                    throw new Exception("SYNTAX ERROR: argument missing");
+                }
+                temporal = Expression();
+                if (temporal.GetType() != TokenType.Number)
+                {
+                    throw new Exception("ERROR: numerical argument expected");
+                }
+                baseResult.SetValue(Math.Cos(double.Parse(temporal.GetValue().ToString()!)));
+                baseResult.SetType(TokenType.Number);
+                break;
+            case TokenType.Tan:
+                Move(1);
+                if (currentToken.GetType() != TokenType.LeftParenthesisIndicator)
+                {
+                    throw new Exception("SYNTAX ERROR: left parenthesis missing");
+                }
+                if (tokens[index + 1].GetType() == TokenType.RightParenthesisIndicator)
+                {
+                    throw new Exception("SYNTAX ERROR: argument missing");
+                }
+                temporal = Expression();
+                if (temporal.GetType() != TokenType.Number)
+                {
+                    throw new Exception("ERROR: numerical argument expected");
+                }
+                baseResult.SetValue(Math.Tan(double.Parse(temporal.GetValue().ToString()!)));
+                baseResult.SetType(TokenType.Number);
+                break;
+            case TokenType.Print:
+                Move(1);
+                if (currentToken.GetType() != TokenType.LeftParenthesisIndicator)
+                {
+                    throw new Exception("SYNTAX ERROR: left parenthesis missing");
+                }
+                if (tokens[index + 1].GetType() == TokenType.RightParenthesisIndicator)
+                {
+                    throw new Exception("SYNTAX ERROR: argument missing");
+                }
+                temporal = Expression();
+                if (currentToken.GetType() != TokenType.RightParenthesisIndicator)
+                {
+                    throw new Exception("SYNTAX ERROR: right parenthesis missing");
+                }
+                Move(1);
+                if (currentToken.GetType() != TokenType.SemicolonIndicator)
+                {
+                    throw new Exception("SEMANTIC ERROR: operations can't be performed with a void function");
+                }
+                System.Console.WriteLine(temporal);
+                throw new Exception();
+            case TokenType.PI:
+                baseResult.SetValue(Math.PI);
+                baseResult.SetType(TokenType.Number);
+                break;
+
 
             default:
                 System.Console.WriteLine("not expected token");
@@ -579,7 +665,7 @@ public class Parser
         index = InPosition(letPosition);
         currentToken = tokens[index];
         Result varResult = Expression();
-        Storage.variables.RemoveAt(varDict-1);
+        Storage.variables.RemoveAt(varDict - 1);
         varDict -= 1;
         return varResult;
 
@@ -705,7 +791,7 @@ public class Parser
         Storage.variables.Add(argsValue);
         Parser parser = new Parser(function.Body);
         Result functionResult = parser.Analyze();
-        Storage.variables.RemoveAt(varDict-1);
+        Storage.variables.RemoveAt(varDict - 1);
         varDict -= 1;
         return functionResult;
 

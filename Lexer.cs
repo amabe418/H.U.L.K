@@ -275,6 +275,19 @@ public class Lexer
                     tokens.Add(new KeyWord(TokenType.FalseKeyWord));
 
                     break;
+                case "sin":
+                    tokens.Add(new KeyWord(TokenType.Sin));
+                    break;
+                case "cos":
+                    tokens.Add(new KeyWord(TokenType.Cos));
+                    break;
+                case "tan":
+                    tokens.Add(new KeyWord(TokenType.Tan));
+                    break;
+                case "print":
+                    tokens.Add(new KeyWord(TokenType.Print));
+                    break;
+
                 default:
                     tokens.Add(new VarToken(TokenType.Identifier, null!, identifier));
 
