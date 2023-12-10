@@ -579,6 +579,7 @@ public class Parser
                 {
                     throw new Exception("SYNTAX ERROR: argument missing");
                 }
+                Move(1);
                 temporal = Expression();
                 if (currentToken.GetType() != TokenType.RightParenthesisIndicator)
                 {
@@ -589,7 +590,7 @@ public class Parser
                 {
                     throw new Exception("SEMANTIC ERROR: operations can't be performed with a void function");
                 }
-                System.Console.WriteLine(temporal);
+                System.Console.WriteLine(temporal.GetValue());
                 throw new Exception();
             case TokenType.PI:
                 baseResult.SetValue(Math.PI);
