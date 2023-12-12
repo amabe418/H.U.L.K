@@ -55,6 +55,8 @@ public class Lexer
         int rightParenthesis = 0;
         int ifToken = 0;
         int elseToken = 0;
+        int letToken = 0;
+        int inToken = 0;
 
         while (currentPosition < code.Length)
         {
@@ -241,12 +243,13 @@ public class Lexer
             {
                 case "let":
                     tokens.Add(new KeyWord(TokenType.LetKeyWord));
+                    letToken++;
 
                     break;
 
                 case "in":
                     tokens.Add(new KeyWord(TokenType.InKeyWord));
-
+                    inToken++;
                     break;
 
                 case "function":
@@ -349,8 +352,16 @@ public class Lexer
 
         if (tokens.ElementAt(tokens.Count - 1).GetType() != TokenType.SemicolonIndicator)
         {
-            System.Console.WriteLine("LEXICAL ERROR: ; expected ");
+            System.Console.WriteLine("LEXICAL ERROR: ; expected at the end of line");
             throw new Exception();
+        }
+        if (letToken > inToken)
+        {
+            throw new Exception("SYNTAX ERROR!: in KeyWord missing");
+        }
+        if (letToken < inToken)
+        {
+            throw new Exception("SYNTAX ERROR!: possible variable not declared");
         }
         return tokens;
     }
