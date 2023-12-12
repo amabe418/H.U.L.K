@@ -582,10 +582,8 @@ public class Parser
                 Move(1);
                 temporal = Expression();
                 if (currentToken.GetType() != TokenType.RightParenthesisIndicator)
-                {
-                    throw new Exception("SYNTAX ERROR: right parenthesis missing");
-                }
-                Move(1);
+
+                    Move(1);
                 while (index <= tokens.Count - 2)
                 {
                     if (currentToken.GetType() != TokenType.RightParenthesisIndicator)
@@ -788,11 +786,7 @@ public class Parser
 
         Dictionary<string, Token> argsValue = new Dictionary<string, Token>();
         GetArgs();
-        if (argsValue.Count != function.Argument.Count)
-        {
-            System.Console.WriteLine("wrong amount of arguments were given");
-            throw new Exception();
-        }
+
         varDict++;
         Storage.variables.Add(argsValue);
         Parser parser = new Parser(function.Body);
@@ -803,16 +797,31 @@ public class Parser
 
         void GetArgs()
         {
-            Result arg = new Result(TokenType.Null, null!);
+            int count = 0;
+            List<Result> arg = new List<Result>();
             Token token = new DataType(TokenType.Null, null!);
+
+            arg.Add(Expression());
+            while (currentToken.GetType() == TokenType.CommaIndicator)
+            {
+                Move(1);
+                arg.Add(Expression());
+                count++;
+            }
+            if (count != function.Argument.Count)
+            {
+                System.Console.WriteLine("wrong amount of arguments were given");
+                throw new Exception();
+            }
             for (int i = 0; i < function.Argument.Count; i++)
             {
-                arg = Expression();
-                token.SetValue(arg.GetValue());
-                token.SetType(arg.GetType());
+                token.SetValue(arg[i].GetValue());
+                token.SetType(arg[i].GetType());
                 argsValue.Add(function.Argument[i].GetName(), token);
-                Move(1);
             }
+
+
+
         }
     }
 }
