@@ -586,10 +586,15 @@ public class Parser
                     throw new Exception("SYNTAX ERROR: right parenthesis missing");
                 }
                 Move(1);
-                if (currentToken.GetType() != TokenType.SemicolonIndicator)
+                while (index <= tokens.Count - 2)
                 {
-                    throw new Exception("SEMANTIC ERROR: operations can't be performed with a void function");
+                    if (currentToken.GetType() != TokenType.RightParenthesisIndicator)
+                    {
+                        throw new Exception("SEMANTIC ERROR: operations can't be performed with a void function");
+                    }
+                    Move(1);
                 }
+
                 System.Console.WriteLine(temporal.GetValue());
                 throw new Exception();
             case TokenType.PI:
