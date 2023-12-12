@@ -488,26 +488,33 @@ public class Parser
                     if (Storage.functions.ContainsKey(currentToken.GetName().ToString()))
                     {
                         baseResult = EvaluateFunction(Storage.functions[currentToken.GetName()]);
-                        // Move(1);
+
                     }
-                }
-                else if (varDict > 0)
-                {
-                    for (int i = varDict - 1; i >= 0; i--)
+                    else
                     {
-                        if (Storage.variables[i].ContainsKey(currentToken.GetName().ToString()!))
-                        {
-                            baseResult.SetType(Storage.variables[i][currentToken.GetName().ToString()!].GetType());
-                            baseResult.SetValue(Storage.variables[i][currentToken.GetName().ToString()!].GetValue());
-                            Move(1);
-                            break;
-                        }
+                        System.Console.WriteLine("SYNTAX ERROR: The function doesn't exist in the current context");
+                        throw new Exception();
                     }
                 }
                 else
                 {
-                    System.Console.WriteLine("SYNTAX ERROR: The identifier doesn't exist in the current context");
-                    throw new Exception();
+                    if (varDict > 0)
+                    {
+                        for (int i = varDict - 1; i >= 0; i--)
+                        {
+                            if (Storage.variables[i].ContainsKey(currentToken.GetName().ToString()!))
+                            {
+                                baseResult.SetType(Storage.variables[i][currentToken.GetName().ToString()!].GetType());
+                                baseResult.SetValue(Storage.variables[i][currentToken.GetName().ToString()!].GetValue());
+                                Move(1);
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception("SYNTAX ERROR: The identifier doesn't exist in the current context");
+                    }
                 }
                 break;
             case TokenType.FunctionKeyWord:
@@ -694,6 +701,10 @@ public class Parser
                 System.Console.WriteLine("SYNTAX ERROR! invalid expression term \"let\"");
                 throw new Exception();
             }
+            if (currentToken.GetType() == TokenType.InKeyWord)
+            {
+                throw new Exception("SYNTAX ERROR!: missing expression after variable declaration");
+            }
             Result variable = Expression();
             scopedVariables.Add(name.ToString(), new VarToken(variable.GetType(), variable.GetValue(), name));
         }
@@ -802,12 +813,14 @@ public class Parser
             Token token = new DataType(TokenType.Null, null!);
 
             arg.Add(Expression());
+            count = 1;
             while (currentToken.GetType() == TokenType.CommaIndicator)
             {
                 Move(1);
                 arg.Add(Expression());
                 count++;
             }
+
             if (count != function.Argument.Count)
             {
                 System.Console.WriteLine("wrong amount of arguments were given");
