@@ -513,7 +513,8 @@ public class Parser
                     }
                     else
                     {
-                        throw new Exception("SYNTAX ERROR: The identifier doesn't exist in the current context");
+                        System.Console.WriteLine("SYNTAX ERROR: The identifier doesn't exist in the current context");
+                        throw new Exception();
                     }
                 }
                 break;
